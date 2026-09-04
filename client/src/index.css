@@ -1,1 +1,38 @@
 @import "tailwindcss";
+@import "@fontsource/archivo-black/400.css";
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
+
+@theme {
+  /* Structure */
+  --color-canvas: #0d9488;
+  --color-surface: #fffdf4;
+  --color-ink: #000000;
+
+  /* Brand palette */
+  --color-brand-pink: #ff3cac;
+  --color-brand-yellow: #ffe500;
+  --color-brand-blue: #0ea5e9;
+  --color-brand-orange: #ff8000;
+
+  /* State */
+  --color-success: #22c55e;
+  --color-danger: #e53535;
+
+  /* Typography */
+  --font-heading: "Archivo Black", system-ui, sans-serif;
+  --font-body: "Space Mono", ui-monospace, monospace;
+
+  /* Hard-offset shadows — the neo-brutalist signature */
+  --shadow-brutal-sm: 3px 3px 0 var(--color-ink);
+  --shadow-brutal: 5px 5px 0 var(--color-ink);
+  --shadow-brutal-lg: 8px 8px 0 var(--color-ink);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+  }
+}
