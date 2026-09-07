@@ -1,13 +1,17 @@
 import Button from "./components/ui/Button";
+import Card from "./components/ui/Card";
+import Screen from "./components/ui/Screen";
 
 function App() {
   return (
-    <div className="flex flex-col items-center gap-4 p-8">
+    <Screen>
+      <Card>
+        <h1 className="font-heading text-3xl uppercase">Movie Roulette</h1>
+        <p className="mt-2">Swipe. Match. Watch.</p>
+      </Card>
       <Button>Create a Room</Button>
       <Button variant="secondary">Enter a Room</Button>
-      <Button variant="ghost">Back</Button>
-      <Button disabled>Disabled</Button>
-    </div>
+    </Screen>
   );
 }
 
