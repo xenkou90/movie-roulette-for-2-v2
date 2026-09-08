@@ -1,17 +1,25 @@
-import Button from "./components/ui/Button";
-import Card from "./components/ui/Card";
-import Screen from "./components/ui/Screen";
+import { BrowserRouter, Routes, Route } from "react-router";
+import Home from "./routes/Home";
+import CreateRoom from "./routes/CreateRoom";
+import JoinRoom from "./routes/JoinRoom";
+import WaitingRoom from "./routes/WaitingRoom";
+import GameScreen from "./routes/GameScreen";
+import MatchScreen from "./routes/MatchScreen";
+import NotFound from "./routes/NotFound";
 
 function App() {
   return (
-    <Screen>
-      <Card>
-        <h1 className="font-heading text-3xl uppercase">Movie Roulette</h1>
-        <p className="mt-2">Swipe. Match. Watch.</p>
-      </Card>
-      <Button>Create a Room</Button>
-      <Button variant="secondary">Enter a Room</Button>
-    </Screen>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/create" element={<CreateRoom />} />
+        <Route path="/join" element={<JoinRoom />} />
+        <Route path="/room/:code/wait" element={<WaitingRoom />} />
+        <Route path="/room/:code/game" element={<GameScreen />} />
+        <Route path="/room/:code/match" element={<MatchScreen />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
