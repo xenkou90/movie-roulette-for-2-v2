@@ -1,8 +1,9 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "moduleResolution": "bundler",
-    "module": "ESNext"
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true
   },
   "include": ["src"]
 }
