@@ -12,6 +12,19 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
 
   {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+
+  {
     files: ["client/src/**/*.{ts,tsx}"],
     plugins: {
       "react-hooks": reactHooks,
