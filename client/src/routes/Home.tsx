@@ -27,6 +27,7 @@ function Home() {
                 <p className="mt-4 text-xs uppercase tracking-[0.25em] opacity-60">
                     Swipe · Match · Watch
                 </p>
+
             </Card>
 
             <div className="flex w-full max-w-sm flex-col gap-4">
