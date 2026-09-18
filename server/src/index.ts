@@ -4,14 +4,21 @@ import { Server } from "socket.io";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
+  SocketData,
 } from "@movie-roulette/shared";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errors.js";
+import { registerRoomHandlers } from "./rooms/handlers.js";
 
 const app = express();
 const httpServer = createServer(app);
 
-const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  Record<string, never>,
+  SocketData
+>(httpServer, {
   cors: { origin: env.clientUrl },
 });
 
@@ -26,6 +33,8 @@ io.on("connection", (socket) => {
   socket.on("client:ping", (ack) => {
     ack({ serverTime: Date.now() });
   });
+
+  registerRoomHandlers(io, socket);
 
   socket.on("disconnect", (reason) => {
     console.log(`[socket] disconnected: ${socket.id} (${reason})`);
