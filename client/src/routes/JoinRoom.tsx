@@ -7,6 +7,7 @@ import {
   type RoomErrorCode,
 } from "@movie-roulette/shared";
 import { useSocket } from "../hooks/useSocket";
+import { useRoom } from "../hooks/useRoom";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -33,6 +34,8 @@ function JoinRoom() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { enterRoom } = useRoom();
+
   const trimmedName = name.trim();
   const isCodeValid = ROOM_CODE_REGEX.test(code);
   const canSubmit =
@@ -51,6 +54,7 @@ function JoinRoom() {
 
     socket.emit("room:join", { code, name: trimmedName }, (result) => {
       if (result.ok) {
+        enterRoom({ room: result.room, you: result.you });
         navigate(`/room/${result.room.code}/wait`);
         return;
       }
