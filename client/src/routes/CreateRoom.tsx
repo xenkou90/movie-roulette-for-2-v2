@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { PLAYER_NAME_MAX_LENGTH } from "@movie-roulette/shared";
 import { useSocket } from "../hooks/useSocket";
+import { useRoom } from "../hooks/useRoom";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -18,6 +19,8 @@ function CreateRoom() {
   const trimmedName = name.trim();
   const canSubmit = trimmedName.length > 0 && isConnected && !isSubmitting;
 
+  const { enterRoom } = useRoom();
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) return;
@@ -27,6 +30,7 @@ function CreateRoom() {
 
     socket.emit("room:create", { name: trimmedName }, (result) => {
       if (result.ok) {
+        enterRoom({ room: result.room, you: result.you });
         navigate(`/room/${result.room.code}/wait`);
         return;
       }
