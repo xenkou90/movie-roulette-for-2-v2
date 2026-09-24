@@ -1,5 +1,6 @@
 import { randomInt } from "node:crypto";
 import { ROOM_CODE_LENGTH } from "@movie-roulette/shared";
+import type { GameSession } from "../game/session.js";
 
 export interface Player {
     socketId: string;
@@ -10,6 +11,7 @@ export interface Room {
     code: string;
     players: Player[];
     createdAt: number;
+    game?: GameSession;
 }
 
 export type JoinFailure = "room_not_found" | "room_full";
