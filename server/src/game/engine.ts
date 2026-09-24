@@ -1,4 +1,4 @@
-export type Decision = "skip" | "like";
+import type { Decision } from "@movie-roulette/shared";
 
 export interface PlayerProgress {
     index: number;
