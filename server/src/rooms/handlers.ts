@@ -1,11 +1,8 @@
-import type { Server, Socket } from "socket.io";
-import type {
-    ClientToServerEvents,
-    RoomView,
-    ServerToClientEvents,
-    SocketData,
-} from "@movie-roulette/shared";
+import type { RoomView } from "@movie-roulette/shared";
+import { startGame } from "../game/handlers.js";
+import type { AppServer, AppSocket } from "../socket/types.js";
 import {
+    MAX_PLAYERS,
     createRoom,
     generateRoomCode,
     joinRoom,
@@ -13,20 +10,6 @@ import {
     type Room,
 } from "./store.js";
 import { normalisePlayerName, normaliseRoomCode } from "./validation.js";
-
-type AppServer = Server<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    Record<string, never>,
-    SocketData
->;
-
-type AppSocket = Socket<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    Record<string, never>,
-    SocketData
->;
 
 function toRoomView(room: Room): RoomView {
     return {
@@ -51,6 +34,8 @@ function leaveCurrentRoom(io: AppServer, socket: AppSocket): void {
     socket.data.playerName = undefined;
 
     if (remaining !== undefined) {
+        remaining.game = undefined;
+
         io.to(code).emit("room:playerLeft", {
             socketId: socket.id,
             name: name ?? "A player",
@@ -110,7 +95,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
 
         const result = joinRoom(roomCode, {
             socketId: socket.id,
-            name: playerName
+            name: playerName,
         });
 
         if (!result.ok) {
@@ -120,7 +105,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
 
         void socket.join(roomCode);
         socket.data.roomCode = roomCode;
-        socket.data.playerName = playerName;
+        socket.data.playerName= playerName;
 
         console.log(`[room] ${playerName} joined ${roomCode}`);
 
@@ -133,6 +118,12 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
         });
 
         socket.to(roomCode).emit("room:updated", view);
+
+        if (result.room.players.length === MAX_PLAYERS) {
+            startGame(io, result.room).catch((error: unknown) => {
+                console.error(`[game] unexpected error starting ${roomCode}`, error);
+            });
+        }
     });
 
     socket.on("room:leave", (ack) => {

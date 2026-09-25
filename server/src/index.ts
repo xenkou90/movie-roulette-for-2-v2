@@ -9,6 +9,7 @@ import type {
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errors.js";
 import { registerRoomHandlers } from "./rooms/handlers.js";
+import { registerGameHandlers } from "./game/handlers.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -35,6 +36,7 @@ io.on("connection", (socket) => {
   });
 
   registerRoomHandlers(io, socket);
+  registerGameHandlers(io, socket);
 
   socket.on("disconnect", (reason) => {
     console.log(`[socket] disconnected: ${socket.id} (${reason})`);
