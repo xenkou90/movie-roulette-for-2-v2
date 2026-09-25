@@ -20,7 +20,7 @@ export type JoinResult =
     | { ok: true; room: Room }
     | { ok: false; reason: JoinFailure };
 
-const MAX_PLAYERS = 2;
+export const MAX_PLAYERS = 2;
 const MAX_CODE_ATTEMPTS = 50;
 
 const rooms = new Map<string, Room>();
