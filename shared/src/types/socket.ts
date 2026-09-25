@@ -47,8 +47,8 @@ export interface ServerToClientEvents {
   "server:hello": (payload: ServerHelloPayload) => void;
   "room:updated": (room: RoomView) => void;
   "room:playerLeft": (payload: { socketId: string; name: string }) => void;
-  "room:started": (payload: { movie: Movie }) => void;
-  "room:matched": (payload: { movie: Movie }) => void;
+  "game:started": (payload: { movie: Movie }) => void;
+  "game:matched": (payload: { movie: Movie }) => void;
   "game:partnerPassed": () => void;
   "game:unavailable": () => void;
 }
