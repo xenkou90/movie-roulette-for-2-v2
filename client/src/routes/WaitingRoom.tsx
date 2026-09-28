@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Navigate, useNavigate, useParams } from "react-router";
 import { useRoom } from "../hooks/useRoom";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
@@ -8,7 +8,7 @@ import Button from "../components/ui/Button";
 function WaitingRoom() {
   const navigate = useNavigate();
   const { code } = useParams();
-  const { current, lastDeparture, leaveRoom } = useRoom();
+  const { current, lastDeparture, game, leaveRoom } = useRoom();
   const [copied, setCopied] = useState(false);
 
   if (current === null || current.room.code !== code) {
@@ -19,7 +19,7 @@ function WaitingRoom() {
             You&apos;re not in this room
           </h1>
           <p className="mt-3 text-sm">
-            Rooms close when you leave, refresh or lose connection.
+            Rooms close when you leave, refresh, or lose connection.
           </p>
           <Button className="mt-6 w-full" onClick={() => navigate("/")}>
             Back to home
@@ -29,7 +29,16 @@ function WaitingRoom() {
     );
   }
 
-  const { room, you } = current;
+  const { room, you }= current;
+
+  if(game.status === "playing") {
+    return <Navigate to={`/room/${room.code}/game`} replace />;
+  }
+
+  if (game.status === "matched") {
+    return <Navigate to={`/room/${room.code}/match`} replace />;
+  }
+
   const partner = room.players.find((player) => player.socketId !== you.socketId);
   const isHost = room.players[0]?.socketId === you.socketId;
 
@@ -49,7 +58,9 @@ function WaitingRoom() {
   }
 
   let status: string;
-  if (partner !== undefined) {
+  if (game.status === "unavailable") {
+    status = "Couldn't load movies right now. Leave and try again.";
+  } else if (partner !== undefined) {
     status = `${partner.name} is here. Starting soon…`;
   } else if (lastDeparture !== null) {
     status = `${lastDeparture} left. Waiting for someone new…`;
@@ -61,7 +72,7 @@ function WaitingRoom() {
     <Screen>
       <Card className="flex flex-col items-center gap-5 text-center">
         <h1 className="font-heading text-3xl uppercase">
-          {isHost ? "Your Room": "Joined!"}
+          {isHost ? "Your Room" : "Joined!"}
         </h1>
 
         <div className="flex w-full flex-col items-center gap-2">
@@ -85,7 +96,7 @@ function WaitingRoom() {
             className={`h-3 w-3 shrink-0 rounded-full border-2 border-ink ${
               partner !== undefined
                 ? "bg-success"
-                : "bg-brand-yellow motion-safe: animate-pulse"
+                : "bg-brand-yellow motion-safe:animate-pulse"
             }`}
           />
           <p className="text-sm">{status}</p>
@@ -103,7 +114,7 @@ function WaitingRoom() {
         </ul>
 
         <Button variant="ghost" onClick={handleLeave}>
-          Leave Room
+          Leave room
         </Button>
       </Card>
     </Screen>
