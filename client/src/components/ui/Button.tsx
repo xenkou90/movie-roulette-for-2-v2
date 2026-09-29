@@ -1,9 +1,11 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: ButtonVariant;
+    size?: ButtonSize;
     children: ReactNode;
 }
 
@@ -13,10 +15,15 @@ const variantStyles: Record<ButtonVariant, string> = {
     ghost: "bg-transparent text-ink border-transparent shadow-none",
 };
 
+const sizeStyles: Record<ButtonSize, string> = {
+    sm: "min-h-11 px-3 py-2 text-sm",
+    md: "min-h-11 px-6 py-3 text-lg",
+    lg: "min-h-14 px-6 py-4 text-xl",
+};
+
 const baseStyles =
     "inline-flex items-center justify-center " +
-    "min-h-11 px-6 py-3 " +
-    "font-heading text-lg uppercase tracking-wide " +
+    "font-heading uppercase tracking-wide " +
     "border-3 border-ink rounded-xl shadow-brutal " +
     "transition-transform duration-75 " +
     "active:translate-x-[3px] active:translate-y-[3px] active:shadow-none " +
@@ -25,15 +32,16 @@ const baseStyles =
 
 function Button({
     variant = "primary",
+    size = "md",
     children,
-    className= "",
+    className = "",
     type = "button",
     ...rest
 }: ButtonProps) {
     return (
         <button
             type={type}
-            className={`${baseStyles} ${variantStyles[variant]} ${className}`}
+            className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
             {...rest}
         >
             {children}
