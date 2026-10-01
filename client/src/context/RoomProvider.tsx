@@ -32,7 +32,7 @@ function RoomProvider({ children }: RoomProviderProps) {
 
         function handlePlayerLeft(payload: { socketId: string; name: string }) {
             setLastDeparture(payload.name);
-            dispatch({ type: "reset" });
+            dispatch({ type: "partnerLeft" });
         }
 
         function handleDisconnect() {
