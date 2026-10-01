@@ -22,6 +22,7 @@ export type GameAction =
     | { type: "partnerPassed" }
     | { type: "noticeCleared" }
     | { type: "matched"; movie: Movie }
+    | { type: "partnerLeft"}
     | { type: "unavailable" }
     | { type: "reset" };
 
@@ -59,6 +60,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
         case "matched":
             return { status: "matched", movie: action.movie };
+
+        case "partnerLeft":
+            return state.status === "matched" ? state : initialGameState;
 
         case "unavailable":
             return { status: "unavailable" };
