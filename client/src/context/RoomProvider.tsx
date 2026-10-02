@@ -97,12 +97,16 @@ function RoomProvider({ children }: RoomProviderProps) {
 
             socket.emit("game:decide", { movieId, decision }, (result) => {
                 if (!result.ok) {
-                    dispatch({ type: "decisionRejected" });
+                    dispatch({ type: "decisionRejected", error: result.error });
                     return;
                 }
 
                 if (result.movie !== null) {
-                    dispatch({ type: "advanced", movie: result.movie });
+                    dispatch({
+                        type: "advanced",
+                        movie: result.movie,
+                        partnerAlreadyPassed: result.partnerAlreadyPassed,
+                    });
                 }
             });
         },
