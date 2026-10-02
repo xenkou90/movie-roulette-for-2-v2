@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Navigate, useNavigate, useParams } from "react-router";
+import { Navigate, useParams } from "react-router";
 import { useRoom } from "../hooks/useRoom";
+import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import type { GameNotice } from "../game/gameReducer";
 import { posterSrc, posterSrcSet } from "../lib/tmdbImage";
 import Button from "../components/ui/Button";
@@ -11,9 +12,9 @@ const noticeText: Record<GameNotice, string> = {
 };
 
 function GameScreen() {
-  const navigate = useNavigate();
   const { code } = useParams();
-  const { current, game, decide, clearNotice, leaveRoom } = useRoom();
+  const { current, game, decide, clearNotice } = useRoom();
+  const leave = useLeaveRoom();
   const [confirmingLeave, setConfirmingLeave] = useState(false);
 
   const notice = game.status === "playing" ? game.notice : null;
@@ -48,11 +49,6 @@ function GameScreen() {
     "Your friend";
   const genres = movie.genres.slice(0, 3).join (", ");
   const hasRating = movie.rating > 0;
-
-  function handleLeave() {
-    leaveRoom();
-    navigate("/");
-  }
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-sm flex-col gap-3 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -153,7 +149,7 @@ function GameScreen() {
         cancelLabel="Keep swiping"
         confirmLabel="Leave anyway"
         onCancel={() => setConfirmingLeave(false)}
-        onConfirm={handleLeave}
+        onConfirm={leave}
       >
         {partnerName} will be left swiping alone — and the popcorn&apos;s barely
         warm!

@@ -1,14 +1,15 @@
-import { Navigate, useNavigate, useParams } from "react-router";
+import { Navigate, useParams } from "react-router";
 import { useRoom } from "../hooks/useRoom";
+import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import { posterSrc } from "../lib/tmdbImage";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 
 function MatchScreen() {
-  const navigate = useNavigate();
   const { code } = useParams();
-  const { current, game, leaveRoom } = useRoom();
+  const { current, game } = useRoom();
+  const leave = useLeaveRoom();
 
   if(current === null || current.room.code !== code) {
     return (
@@ -27,11 +28,6 @@ function MatchScreen() {
   }
 
   const { movie } = game;
-
-  function handleLeave() {
-    leaveRoom();
-    navigate("/");
-  }
 
   return (
     <Screen>
@@ -62,7 +58,7 @@ function MatchScreen() {
 
         <p className="text-sm">Movie night is decided.</p>
 
-        <Button variant="ghost" onClick={handleLeave}>
+        <Button variant="ghost" onClick={leave}>
           Leave room
         </Button>
       </Card>
