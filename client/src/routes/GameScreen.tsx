@@ -9,6 +9,8 @@ import ConfirmDialog from "../components/ui/ConfirmDialog";
 
 const noticeText: Record<GameNotice, string> = {
   partner_passed: "They passed on one of your picks.",
+  partner_already_passed: "They'd already passed on that one.",
+  next_movie_failed: "Couldn't load the next movie. Tap again to retry.",
 };
 
 function GameScreen() {
