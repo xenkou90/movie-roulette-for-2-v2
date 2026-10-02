@@ -55,14 +55,20 @@ function WaitingRoom() {
   }
 
   let status: string;
+  let dotClass: string;
+
   if (game.status === "unavailable") {
     status = "Couldn't load movies right now. Leave and try again.";
+    dotClass = "bg-danger";
   } else if (partner !== undefined) {
     status = `${partner.name} is here. Starting soon…`;
+    dotClass = "bg-success";
   } else if (lastDeparture !== null) {
     status = `${lastDeparture} left. Waiting for someone new…`;
+    dotClass = "bg-brand-yellow motion-safe:animate-pulse";
   } else {
     status = "Waiting for your friend…";
+    dotClass = "bg-brand-yellow motion-safe:animate-pulse";
   }
 
   return (
@@ -90,12 +96,9 @@ function WaitingRoom() {
         <div className="flex items-center gap-3" role="status" aria-live="polite">
           <span
             aria-hidden="true"
-            className={`h-3 w-3 shrink-0 rounded-full border-2 border-ink ${
-              partner !== undefined
-                ? "bg-success"
-                : "bg-brand-yellow motion-safe:animate-pulse"
-            }`}
+            className={`h-3 w-3 shrink-0 rounded-full border-2 border-ink ${dotClass}`}
           />
+
           <p className="text-sm">{status}</p>
         </div>
 
