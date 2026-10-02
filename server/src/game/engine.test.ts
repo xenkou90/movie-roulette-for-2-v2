@@ -119,4 +119,24 @@ describe("applyDecision", () => {
 
         expect(outcome).toEqual({ type: "out_of_turn" });
     });
+
+    it("tells a player when they like a movie the partner already skipped", () => {
+        const state = newGame();
+
+        applyDecision(state, ALICE, 4, "skip");
+        const outcome = applyDecision(state, BOB, 4, "like");
+
+        expect(outcome).toEqual({ type: "partner_already_passed" });
+        expect(state.matchedMovieId).toBeNull();
+        expect(getIndex(state, BOB)).toBe(1);
+    });
+
+    it("reports nothing when both players skip the same movie", () => {
+        const state = newGame();
+
+        applyDecision(state, ALICE, 8, "skip");
+        const outcome = applyDecision(state, BOB, 8, "skip");
+
+        expect(outcome).toEqual({ type: "advance" });
+    });
 });
