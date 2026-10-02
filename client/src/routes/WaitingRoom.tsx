@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router";
 import { useRoom } from "../hooks/useRoom";
+import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -8,7 +9,8 @@ import Button from "../components/ui/Button";
 function WaitingRoom() {
   const navigate = useNavigate();
   const { code } = useParams();
-  const { current, lastDeparture, game, leaveRoom } = useRoom();
+  const { current, lastDeparture, game } = useRoom();
+  const leave = useLeaveRoom();
   const [copied, setCopied] = useState(false);
 
   if (current === null || current.room.code !== code) {
@@ -50,11 +52,6 @@ function WaitingRoom() {
     } catch {
       // Clipboard unavailable (insecure context or denied). The code stays visible to read.
     }
-  }
-
-  function handleLeave() {
-    leaveRoom();
-    navigate("/");
   }
 
   let status: string;
@@ -113,7 +110,7 @@ function WaitingRoom() {
             ))}
         </ul>
 
-        <Button variant="ghost" onClick={handleLeave}>
+        <Button variant="ghost" onClick={leave}>
           Leave room
         </Button>
       </Card>
