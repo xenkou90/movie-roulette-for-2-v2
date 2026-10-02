@@ -31,7 +31,7 @@ export type GameErrorCode =
   | "queue_unavailable";
 
 export type DecideResult =
-  | { ok: true; movie: Movie | null }
+  | { ok: true; movie: Movie | null; partnerAlreadyPassed: boolean }
   | { ok: false; error: GameErrorCode };
 
 export interface ServerHelloPayload {

@@ -3,6 +3,7 @@ import type { Decision } from "@movie-roulette/shared";
 export interface PlayerProgress {
     index: number;
     likedIds: Set<number>;
+    skippedIds: Set<number>;
 }
 
 export interface GameState {
@@ -14,6 +15,7 @@ export type DecisionOutcome =
     | { type: "advance" }
     | { type: "match", movieId: number }
     | { type: "partner_passed" }
+    | { type: "partner_already_passed"}
     | { type: "already_matched" }
     | { type: "out_of_turn" };
 
@@ -21,7 +23,11 @@ export function createGameState(playerIds: string[]): GameState {
     const progress = new Map<string, PlayerProgress>();
 
     for (const id of playerIds) {
-        progress.set(id, { index: 0, likedIds: new Set() });
+        progress.set(id, {
+            index: 0,
+            likedIds: new Set(),
+            skippedIds: new Set(),
+        });
     }
 
     return { progress, matchedMovieId: null };
@@ -29,6 +35,12 @@ export function createGameState(playerIds: string[]): GameState {
 
 export function getIndex(state: GameState, playerId: string): number {
     return state.progress.get(playerId)?.index ?? 0;
+}
+
+function partnerOf(state: GameState, playerId: string): PlayerProgress[] {
+    return [...state.progress]
+        .filter(([id]) => id !== playerId)
+        .map(([, progress]) => progress);
 }
 
 export function applyDecision(
@@ -49,8 +61,10 @@ export function applyDecision(
     player.index += 1;
 
     if (decision === "skip") {
-        const partnerLikedIt = [...state.progress].some(
-            ([id, other]) => id !== playerId && other.likedIds.has(movieId),
+        player.skippedIds.add(movieId);
+
+        const partnerLikedIt = partnerOf(state, playerId).some((partner) =>
+            partner.likedIds.has(movieId),
         );
 
         return partnerLikedIt ? { type: "partner_passed" } : { type: "advance" };
@@ -58,8 +72,8 @@ export function applyDecision(
 
     player.likedIds.add(movieId);
 
-    const everyoneLikedIt = [...state.progress.values()].every((other) =>
-        other.likedIds.has(movieId),
+    const everyoneLikedIt = [...state.progress.values()].every((progress) =>
+        progress.likedIds.has(movieId),
     );
 
     if (everyoneLikedIt) {
@@ -67,5 +81,11 @@ export function applyDecision(
         return { type: "match", movieId };
     }
 
-    return { type: "advance" };
+    const partnerSkippedIt = partnerOf(state, playerId).some((partner) =>
+        partner.skippedIds.has(movieId),
+    );
+
+    return partnerSkippedIt
+        ? { type: "partner_already_passed" }
+        : { type: "advance" };
 }

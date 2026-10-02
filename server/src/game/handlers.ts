@@ -138,7 +138,7 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
         switch (outcome.type) {
             case "match":
                 io.to(room.code).emit("game:matched", { movie: current });
-                ack({ ok: true, movie: null });
+                ack({ ok: true, movie: null, partnerAlreadyPassed: false });
                 return;
             case "already_matched":
                 ack({ ok: false, error: "game_over" });
@@ -148,10 +148,13 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
                 return;
             case "partner_passed":
                 notifyPartners(io, room, socket.id);
-                ack({ ok: true, movie: next });
+                ack({ ok: true, movie: next, partnerAlreadyPassed: false });
+                return;
+            case "partner_already_passed":
+                ack({ ok: true, movie: next, partnerAlreadyPassed: true });
                 return;
             case "advance":
-                ack({ ok: true, movie: next });
+                ack({ ok: true, movie: next, partnerAlreadyPassed: false });
                 return;
             default: {
                 const unhandled: never = outcome;
