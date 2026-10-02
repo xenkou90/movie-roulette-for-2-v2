@@ -1,4 +1,4 @@
-const TMDB_IMAGE_BASE = "https://image.tmdb.orgt/p";
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p";
 const POSTER_WIDTHS = [342, 500, 780] as const;
 
 type PosterWidth = (typeof POSTER_WIDTHS)[number];
