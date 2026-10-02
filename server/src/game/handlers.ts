@@ -22,6 +22,12 @@ function notifyPartners(io: AppServer, room: Room, deciderId: string): void {
     }
 }
 
+function prefetch(room: Room, session: GameSession, index: number): void {
+    ensureAvailable(session.queue, index).catch((error: unknown) => {
+        console.error(`[game] background refill failed for ${room.code}`, error);
+    });
+}
+
 export async function startGame(io: AppServer, room: Room): Promise<void> {
     const session: GameSession = {
         status: "loading",
@@ -38,7 +44,7 @@ export async function startGame(io: AppServer, room: Room): Promise<void> {
 
         if (isStillCurrent(room, session)) {
             room.game = undefined;
-            io.to (room.code).emit("game:unavailable");
+            io.to(room.code).emit("game:unavailable");
         }
         return;
     }
@@ -93,6 +99,40 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
             return;
         }
 
+        const nextIndex = index + 1;
+
+        if (session.queue.movies[nextIndex] === undefined) {
+            try {
+                await ensureAvailable(session.queue, nextIndex);
+            } catch (error) {
+                console.error(`[game] could not extend queue for ${room.code}`, error);
+            }
+
+            if (!isStillCurrent(room, session)) {
+                ack({ ok: false, error: "no_active_game" });
+                return;
+            }
+
+            if (session.state.matchedMovieId !== null) {
+                ack({ ok: false, error: "game_over" });
+                return;
+            }
+
+            if (getIndex(session.state, socket.id) !== index) {
+                ack({ ok: false, error: "stale_decision" });
+                return;
+            }
+        } else {
+            prefetch(room, session, nextIndex);
+        }
+
+        const next = session.queue.movies[nextIndex];
+
+        if (next === undefined) {
+            ack({ ok: false, error: "queue_unavailable" });
+            return;
+        }
+
         const outcome = applyDecision(session.state, socket.id, current.id, decision);
 
         switch (outcome.type) {
@@ -108,37 +148,15 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
                 return;
             case "partner_passed":
                 notifyPartners(io, room, socket.id);
-                break;
+                ack({ ok: true, movie: next });
+                return;
             case "advance":
-                break;
+                ack({ ok: true, movie: next });
+                return;
             default: {
                 const unhandled: never = outcome;
                 throw new Error(`Unhandled outcome: ${JSON.stringify(unhandled)}`);
             }
         }
-
-        const nextIndex = getIndex(session.state, socket.id);
-
-        try {
-            await ensureAvailable(session.queue, nextIndex);
-        } catch (error) {
-            console.log(`[game] could not extend queue for ${room.code}`, error);
-            ack({ ok: false, error: "queue_unavailable" });
-            return;
-        }
-
-        if (!isStillCurrent(room, session)) {
-            ack({ ok: false, error: "no_active_game" });
-            return;
-        }
-
-        const next = session.queue.movies[nextIndex];
-
-        if (next === undefined) {
-            ack({ ok: false, error: "queue_unavailable" });
-            return;
-        }
-
-        ack({ ok: true, movie: next });
     });
 }
