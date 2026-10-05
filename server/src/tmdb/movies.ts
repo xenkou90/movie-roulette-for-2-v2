@@ -1,5 +1,5 @@
 import type { Movie } from "@movie-roulette/shared";
-import { tmdbFetch } from "./client.js";
+import { TmdbError, tmdbFetch } from "./client.js";
 import { getGenreMap, type GenreMap } from "./genres.js";
 import type { TmdbMovieSummary, TmdbPaginatedResponse } from "./types.js";
 
@@ -50,4 +50,28 @@ export async function fetchPopularMovies(page = 1): Promise<Movie[]> {
     return response.results
         .filter(isTmdbMovieSummary)
         .map((summary) => toMovie(summary, genreMap));
+}
+
+export interface MovieDetails {
+    runtimeMinutes: number | null;
+    imdbId: string | null;
+}
+
+const IMDB_ID_PATTERN = /^tt\d+$/;
+
+export async function fetchMovieDetails(movieId: number): Promise<MovieDetails> {
+    const data = await tmdbFetch<unknown>(`/movie/${movieId}`);
+
+    if (typeof data !== "object" || data === null) {
+        throw new TmdbError(`Unexpected details response for movie ${movieId}`);
+    }
+
+    const candidate = data as Record<string, unknown>;
+    const { runtime, imdb_id: imdbId } = candidate;
+
+    return {
+        runtimeMinutes: typeof runtime === "number" && runtime > 0 ? runtime : null,
+        imdbId:
+            typeof imdbId === "string" && IMDB_ID_PATTERN.test(imdbId) ? imdbId : null,
+    };
 }
