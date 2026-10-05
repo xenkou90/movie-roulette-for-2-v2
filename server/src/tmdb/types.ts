@@ -23,3 +23,9 @@ export interface TmdbGenre {
 export interface TmdbGenreListResponse {
     genres: TmdbGenre[];
 }
+
+export interface TmdbMovieDetails {
+    id: number;
+    runtime: number | null;
+    imdb_id: string | null;
+}
