@@ -4,6 +4,8 @@ import { applyDecision, createGameState, getIndex } from "./engine.js";
 import { createQueue, ensureAvailable } from "./queue.js";
 import type { GameSession } from "./session.js";
 import { isDecision } from "./validation.js";
+import { fetchMovieDetails } from "../tmdb/movies.js";
+import type { Movie } from "@movie-roulette/shared";
 
 function isStillCurrent(room: Room, session: GameSession): boolean {
     return getRoom(room.code) === room && room.game === session;
@@ -26,6 +28,20 @@ function prefetch(room: Room, session: GameSession, index: number): void {
     ensureAvailable(session.queue, index).catch((error: unknown) => {
         console.error(`[game] background refill failed for ${room.code}`, error);
     });
+}
+
+function sendMatchDetails(io: AppServer, room: Room, movie: Movie): void {
+    fetchMovieDetails(movie.id)
+        .then((details) => {
+            if (getRoom(room.code) !== room) return;
+
+            io.to(room.code).emit("game:matchDetails", {
+                movie: { ...movie, ...details },
+            });
+        })
+        .catch((error: unknown) => {
+            console.error(`[game] could not load details for ${movie.title}`, error);
+        });
 }
 
 export async function startGame(io: AppServer, room: Room): Promise<void> {
@@ -139,6 +155,7 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
             case "match":
                 io.to(room.code).emit("game:matched", { movie: current });
                 ack({ ok: true, movie: null, partnerAlreadyPassed: false });
+                sendMatchDetails(io, room, current);
                 return;
             case "already_matched":
                 ack({ ok: false, error: "game_over" });
