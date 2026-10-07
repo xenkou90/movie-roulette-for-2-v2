@@ -13,10 +13,12 @@ export interface MovieQueue {
     pending: Promise<void> | null;
 }
 
-export function createQueue(): MovieQueue {
+export function createQueue(
+    excludeIds: ReadonlySet<number> = new Set(),
+): MovieQueue {
     return {
         movies: [],
-        seenIds: new Set(),
+        seenIds: new Set(excludeIds),
         nextPage: randomInt(1, STARTING_PAGE_RANGE + 1),
         pending: null,
     };
