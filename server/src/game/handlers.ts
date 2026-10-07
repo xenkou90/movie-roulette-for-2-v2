@@ -1,4 +1,4 @@
-import { getRoom, type Room } from "../rooms/store.js";
+import { MAX_PLAYERS, getRoom, type Room } from "../rooms/store.js";
 import type { AppServer, AppSocket } from "../socket/types.js";
 import { applyDecision, createGameState, getIndex } from "./engine.js";
 import { createQueue, ensureAvailable } from "./queue.js";
@@ -44,11 +44,16 @@ function sendMatchDetails(io: AppServer, room: Room, movie: Movie): void {
         });
 }
 
-export async function startGame(io: AppServer, room: Room): Promise<void> {
+export async function startGame(
+    io: AppServer,
+    room: Room,
+    excludeIds?: ReadonlySet<number>,
+): Promise<void> {
     const session: GameSession = {
         status: "loading",
         state: createGameState(room.players.map((player) => player.socketId)),
-        queue: createQueue(),
+        queue: createQueue(excludeIds),
+        rematchReady: new Set(),
     };
 
     room.game = session;
@@ -177,6 +182,37 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
                 const unhandled: never = outcome;
                 throw new Error(`Unhandled outcome: ${JSON.stringify(unhandled)}`);
             }
+        }
+    });
+
+    socket.on("game:rematch", (ack) => {
+        const room = currentRoom(socket);
+        const session = room?.game;
+
+        if (
+            room === undefined ||
+            session === undefined ||
+            session.state.matchedMovieId === null
+        ) {
+            ack({ ok: false, error: "not_matched" });
+            return;
+        }
+
+        session.rematchReady.add(socket.id);
+        ack({ ok: true });
+
+        io.to(room.code).emit("game:rematchStatus", {
+            readyPlayerIds: [...session.rematchReady],
+        });
+
+        const everyoneReady =
+            room.players.length === MAX_PLAYERS &&
+            room.players.every((player) => session.rematchReady.has(player.socketId));
+
+        if (everyoneReady) {
+            startGame(io, room, session.queue.seenIds).catch((error: unknown) => {
+                console.error(`[game] unexpected error restarting ${room.code}`, error);
+            });
         }
     });
 }
