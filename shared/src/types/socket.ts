@@ -28,11 +28,14 @@ export type GameErrorCode =
   | "invalid_decision"
   | "stale_decision"
   | "game_over"
-  | "queue_unavailable";
+  | "queue_unavailable"
+  | "not_matched";
 
 export type DecideResult =
   | { ok: true; movie: Movie | null; partnerAlreadyPassed: boolean }
   | { ok: false; error: GameErrorCode };
+
+export type RematchResult = { ok: true } | { ok: false; error: GameErrorCode };
 
 export interface ServerHelloPayload {
   socketId: string;
@@ -50,6 +53,7 @@ export interface ServerToClientEvents {
   "game:started": (payload: { movie: Movie }) => void;
   "game:matched": (payload: { movie: Movie }) => void;
   "game:matchDetails": (payload: { movie: Movie }) => void;
+  "game:rematchStatus": (payload: { readyPlayerIds: string[] }) => void;
   "game:partnerPassed": () => void;
   "game:unavailable": () => void;
 }
@@ -69,6 +73,7 @@ export interface ClientToServerEvents {
     payload: { movieId: number; decision: Decision },
     ack: (result: DecideResult) => void,
   ) => void;
+  "game:rematch": (ack: (result: RematchResult) => void) => void;
 }
 
 export interface SocketData {

@@ -7,4 +7,5 @@ export interface GameSession {
     status:GameStatus;
     state: GameState;
     queue: MovieQueue;
+    rematchReady: Set<string>;
 }
