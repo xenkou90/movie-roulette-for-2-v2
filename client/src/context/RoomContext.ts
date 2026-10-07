@@ -15,6 +15,8 @@ export interface RoomContextValue {
     leaveRoom: () => void;
     decide: (movieId: number, decision: Decision) => void;
     clearNotice: () => void;
+    requestRematch: () => void;
+    returnToRoom: () => void;
 }
 
 export const RoomContext = createContext<RoomContextValue | null>(null);

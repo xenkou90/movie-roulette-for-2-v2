@@ -24,9 +24,9 @@ function RoomProvider({ children }: RoomProviderProps) {
     useEffect(() => {
         function handleUpdated(room: RoomView) {
             setCurrent((prev) =>
-                prev !== null && prev.room.code === room.code
-                    ? { ...prev, room }
-                    : prev,
+            prev !== null && prev.room.code === room.code
+                ? { ...prev, room }
+                : prev,
             );
         }
 
@@ -48,6 +48,14 @@ function RoomProvider({ children }: RoomProviderProps) {
             dispatch({ type: "matched", movie: payload.movie });
         }
 
+        function handleMatchDetails(payload: { movie: Movie }) {
+            dispatch({ type: "matchDetails", movie: payload.movie });
+        }
+
+        function handleRematchStatus(payload: { readyPlayerIds: string[] }) {
+            dispatch({ type: "rematchStatus", readyPlayerIds: payload.readyPlayerIds });
+        }
+
         function handlePartnerPassed() {
             dispatch({ type: "partnerPassed" });
         }
@@ -61,6 +69,8 @@ function RoomProvider({ children }: RoomProviderProps) {
         socket.on("disconnect", handleDisconnect);
         socket.on("game:started", handleStarted);
         socket.on("game:matched", handleMatched);
+        socket.on("game:matchDetails", handleMatchDetails);
+        socket.on("game:rematchStatus", handleRematchStatus);
         socket.on("game:partnerPassed", handlePartnerPassed);
         socket.on("game:unavailable", handleUnavailable);
 
@@ -70,10 +80,11 @@ function RoomProvider({ children }: RoomProviderProps) {
             socket.off("disconnect", handleDisconnect);
             socket.off("game:started", handleStarted);
             socket.off("game:matched", handleMatched);
+            socket.off("game:matchDetails", handleMatchDetails);
+            socket.off("game:rematchStatus", handleRematchStatus);
             socket.off("game:partnerPassed", handlePartnerPassed);
             socket.off("game:unavailable", handleUnavailable);
         };
-
     }, [socket]);
 
     const enterRoom = useCallback((next: CurrentRoom) => {
@@ -117,6 +128,17 @@ function RoomProvider({ children }: RoomProviderProps) {
         dispatch({ type: "noticeCleared" });
     }, []);
 
+    const requestRematch = useCallback(() => {
+        socket.emit("game:rematch", () => {
+            // Readiness arrives through game:rematchStatus. A rejection means the
+            // match can no longer be replayed (the partner left), which the screen shows.
+        });
+    }, [socket]);
+
+    const returnToRoom = useCallback(() => {
+        dispatch({ type: "reset" });
+    }, []);
+
     const value = useMemo(
         () => ({
             current,
@@ -126,11 +148,23 @@ function RoomProvider({ children }: RoomProviderProps) {
             leaveRoom,
             decide,
             clearNotice,
+            requestRematch,
+            returnToRoom,
         }),
-        [current, lastDeparture, game, enterRoom, leaveRoom, decide, clearNotice],
+        [
+            current,
+            lastDeparture,
+            game,
+            enterRoom,
+            leaveRoom,
+            decide,
+            clearNotice,
+            requestRematch,
+            returnToRoom,
+        ],
     );
 
-    return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>
+    return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
 }
 
 export default RoomProvider;

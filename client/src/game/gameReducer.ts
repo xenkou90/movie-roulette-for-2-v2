@@ -6,6 +6,7 @@ export type GameNotice =
     | "next_movie_failed";
 
 export type GameState =
+
     | { status: "idle" }
     | { status: "unavailable" }
     | {
@@ -14,22 +15,24 @@ export type GameState =
         pending: boolean;
         notice: GameNotice | null;
         noticeId: number;
-      }
-    | { status: "matched"; movie: Movie };
+        }
+    | { status: "matched"; movie: Movie; readyPlayerIds: string[] };
 
 type PlayingState = Extract<GameState, { status: "playing" }>;
 
 export type GameAction =
-      | { type: "started"; movie: Movie }
-      | { type: "decisionSent" }
-      | { type: "advanced"; movie: Movie; partnerAlreadyPassed: boolean }
-      | { type: "decisionRejected"; error: GameErrorCode }
-      | { type: "partnerPassed" }
-      | { type: "noticeCleared" }
-      | { type: "matched"; movie: Movie }
-      | { type: "partnerLeft" }
-      | { type: "unavailable" }
-      | { type: "reset" };
+        | { type: "started"; movie: Movie }
+        | { type: "decisionSent" }
+        | { type: "advanced"; movie: Movie; partnerAlreadyPassed: boolean }
+        | { type: "decisionRejected"; error: GameErrorCode }
+        | { type: "partnerPassed" }
+        | { type: "noticeCleared" }
+        | { type: "matched"; movie: Movie }
+        | { type: "matchDetails"; movie: Movie }
+        | { type: "rematchStatus"; readyPlayerIds: string[] }
+        | { type: "partnerLeft" }
+        | { type: "unavailable" }
+        | { type: "reset" };
 
 export const initialGameState: GameState = { status: "idle" };
 
@@ -75,13 +78,25 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
                 : state;
 
         case "noticeCleared":
-            return state.status === "playing" ? { ...state, notice: null} : state;
+            return state.status === "playing" ? { ...state, notice: null } : state;
 
         case "matched":
-            return { status: "matched", movie: action.movie };
+            return { status: "matched", movie: action.movie, readyPlayerIds: [] };
+
+        case "matchDetails":
+            return state.status === "matched" && state.movie.id === action.movie.id
+                ? { ...state, movie: action.movie }
+                : state;
+
+        case "rematchStatus":
+            return state.status === "matched"
+                ? { ...state, readyPlayerIds: action.readyPlayerIds }
+                : state;
 
         case "partnerLeft":
-            return state.status === "matched" ? state : initialGameState;
+            return state.status === "matched"
+                ? { ...state, readyPlayerIds: [] }
+                : initialGameState;
 
         case "unavailable":
             return { status: "unavailable" };
