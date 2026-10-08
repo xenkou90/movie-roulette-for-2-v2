@@ -6,6 +6,7 @@ import type { GameNotice } from "../game/gameReducer";
 import { posterSrc, posterSrcSet } from "../lib/tmdbImage";
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import MovieMeta from "../components/movie/MovieMeta";
 
 const noticeText: Record<GameNotice, string> = {
   partner_passed: "They passed on one of your picks.",
@@ -49,8 +50,6 @@ function GameScreen() {
   const partnerName =
     room.players.find((player) => player.socketId !== you.socketId)?.name ??
     "Your friend";
-  const genres = movie.genres.slice(0, 3).join (", ");
-  const hasRating = movie.rating > 0;
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-sm flex-col gap-3 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -109,18 +108,7 @@ function GameScreen() {
           )}
         </h1>
 
-        <p className="mt-1 text-xs uppercase tracking-widest opacity-70">
-          {hasRating ? (
-            <>
-              <span aria-hidden="true">★ </span>
-              <span className="sr-only">Rating </span>
-              {movie.rating.toFixed(1)}
-            </>
-          ) : (
-            "Not rated yet"
-          )}
-          {genres !== "" && ` · ${genres}`}
-        </p>
+        <MovieMeta movie={movie} className="mt-1" />
 
         <p className="mt-2 line-clamp-3 text-sm">
           {movie.overview || "No synopsis available."}
