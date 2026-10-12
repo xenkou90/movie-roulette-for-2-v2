@@ -1,11 +1,11 @@
 import { MAX_PLAYERS, getRoom, type Room } from "../rooms/store.js";
 import type { AppServer, AppSocket } from "../socket/types.js";
+import { withDetails } from "../tmdb/detailsCache.js";
+import { prefetchDetails, sendDetailsWhenReady } from "./details.js";
 import { applyDecision, createGameState, getIndex } from "./engine.js";
 import { createQueue, ensureAvailable } from "./queue.js";
 import type { GameSession } from "./session.js";
 import { isDecision } from "./validation.js";
-import { fetchMovieDetails } from "../tmdb/movies.js";
-import type { Movie } from "@movie-roulette/shared";
 
 function isStillCurrent(room: Room, session: GameSession): boolean {
     return getRoom(room.code) === room && room.game === session;
@@ -24,24 +24,10 @@ function notifyPartners(io: AppServer, room: Room, deciderId: string): void {
     }
 }
 
-function prefetch(room: Room, session: GameSession, index: number): void {
+function prefetchMovies(room: Room, session: GameSession, index: number): void {
     ensureAvailable(session.queue, index).catch((error: unknown) => {
         console.error(`[game] background refill failed for ${room.code}`, error);
     });
-}
-
-function sendMatchDetails(io: AppServer, room: Room, movie: Movie): void {
-    fetchMovieDetails(movie.id)
-        .then((details) => {
-            if (getRoom(room.code) !== room) return;
-
-            io.to(room.code).emit("game:matchDetails", {
-                movie: { ...movie, ...details },
-            });
-        })
-        .catch((error: unknown) => {
-            console.error(`[game] could not load details for ${movie.title}`, error);
-        });
 }
 
 export async function startGame(
@@ -84,8 +70,21 @@ export async function startGame(
     }
 
     session.status = "playing";
-    io.to(room.code).emit("game:started", { movie: first });
+    io.to(room.code).emit("game:started", { movie: withDetails(first) });
     console.log(`[game] started in ${room.code}`);
+
+    for (const player of room.players) {
+        sendDetailsWhenReady(
+            io,
+            player.socketId,
+            first,
+            () =>
+                isStillCurrent(room, session) &&
+                getIndex(session.state, player.socketId) === 0,
+        );
+    }
+
+    prefetchDetails(session.queue, 1);
 }
 
 export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
@@ -144,7 +143,7 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
                 return;
             }
         } else {
-            prefetch(room, session, nextIndex);
+            prefetchMovies(room, session, nextIndex);
         }
 
         const next = session.queue.movies[nextIndex];
@@ -158,9 +157,14 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
 
         switch (outcome.type) {
             case "match":
-                io.to(room.code).emit("game:matched", { movie: current });
+                io.to(room.code).emit("game:matched", { movie: withDetails(current) });
                 ack({ ok: true, movie: null, partnerAlreadyPassed: false });
-                sendMatchDetails(io, room, current);
+                sendDetailsWhenReady(
+                    io,
+                    room.code,
+                    current,
+                    () => getRoom(room.code) === room,
+                );
                 return;
             case "already_matched":
                 ack({ ok: false, error: "game_over" });
@@ -170,19 +174,32 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
                 return;
             case "partner_passed":
                 notifyPartners(io, room, socket.id);
-                ack({ ok: true, movie: next, partnerAlreadyPassed: false });
-                return;
+                break;
             case "partner_already_passed":
-                ack({ ok: true, movie: next, partnerAlreadyPassed: true });
-                return;
             case "advance":
-                ack({ ok: true, movie: next, partnerAlreadyPassed: false });
-                return;
+                break;
             default: {
                 const unhandled: never = outcome;
                 throw new Error(`Unhandled outcome: ${JSON.stringify(unhandled)}`);
             }
         }
+
+        ack({
+            ok: true,
+            movie: withDetails(next),
+            partnerAlreadyPassed: outcome.type === "partner_already_passed",
+        });
+
+        sendDetailsWhenReady(
+            io,
+            socket.id,
+            next,
+            () =>
+                isStillCurrent(room, session) &&
+                getIndex(session.state, socket.id) === nextIndex,
+        );
+
+        prefetchDetails(session.queue, nextIndex + 1);
     });
 
     socket.on("game:rematch", (ack) => {

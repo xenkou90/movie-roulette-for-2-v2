@@ -48,8 +48,8 @@ function RoomProvider({ children }: RoomProviderProps) {
             dispatch({ type: "matched", movie: payload.movie });
         }
 
-        function handleMatchDetails(payload: { movie: Movie }) {
-            dispatch({ type: "matchDetails", movie: payload.movie });
+        function handleMovieDetails(payload: { movie: Movie }) {
+            dispatch({ type: "movieDetails", movie: payload.movie });
         }
 
         function handleRematchStatus(payload: { readyPlayerIds: string[] }) {
@@ -69,7 +69,7 @@ function RoomProvider({ children }: RoomProviderProps) {
         socket.on("disconnect", handleDisconnect);
         socket.on("game:started", handleStarted);
         socket.on("game:matched", handleMatched);
-        socket.on("game:matchDetails", handleMatchDetails);
+        socket.on("game:movieDetails", handleMovieDetails);
         socket.on("game:rematchStatus", handleRematchStatus);
         socket.on("game:partnerPassed", handlePartnerPassed);
         socket.on("game:unavailable", handleUnavailable);
@@ -80,7 +80,7 @@ function RoomProvider({ children }: RoomProviderProps) {
             socket.off("disconnect", handleDisconnect);
             socket.off("game:started", handleStarted);
             socket.off("game:matched", handleMatched);
-            socket.off("game:matchDetails", handleMatchDetails);
+            socket.off("game:movieDetails", handleMovieDetails);
             socket.off("game:rematchStatus", handleRematchStatus);
             socket.off("game:partnerPassed", handlePartnerPassed);
             socket.off("game:unavailable", handleUnavailable);

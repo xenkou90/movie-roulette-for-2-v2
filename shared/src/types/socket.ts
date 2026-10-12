@@ -52,7 +52,7 @@ export interface ServerToClientEvents {
   "room:playerLeft": (payload: { socketId: string; name: string }) => void;
   "game:started": (payload: { movie: Movie }) => void;
   "game:matched": (payload: { movie: Movie }) => void;
-  "game:matchDetails": (payload: { movie: Movie }) => void;
+  "game:movieDetails": (payload: { movie: Movie }) => void;
   "game:rematchStatus": (payload: { readyPlayerIds: string[] }) => void;
   "game:partnerPassed": () => void;
   "game:unavailable": () => void;
