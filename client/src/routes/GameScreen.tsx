@@ -7,6 +7,8 @@ import { posterSrc, posterSrcSet } from "../lib/tmdbImage";
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import MovieMeta from "../components/movie/MovieMeta";
+import ExternalLinkButton from "../components/ui/ExternalLinkButton";
+import { imdbUrl, letterboxdUrl } from "../lib/movieLinks";
 
 const noticeText: Record<GameNotice, string> = {
   partner_passed: "They passed on one of your picks.",
@@ -114,6 +116,15 @@ function GameScreen() {
           {movie.overview || "No synopsis available."}
         </p>
       </section>
+
+      <div className="grid grid-cols-2 gap-3">
+        <ExternalLinkButton href={imdbUrl(movie)} variant="ghost" size="sm">
+          IMDb
+        </ExternalLinkButton>
+        <ExternalLinkButton href={letterboxdUrl(movie)} variant="ghost" size="sm">
+          Letterboxd
+        </ExternalLinkButton>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Button
