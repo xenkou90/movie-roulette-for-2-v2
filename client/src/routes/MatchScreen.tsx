@@ -99,7 +99,7 @@ function MatchScreen() {
           <Button
             size="lg"
             className="w-full"
-            disabled={youReady}
+            pending={youReady}
             onClick={requestRematch}
           >
             {youReady ? "You're ready" : "Play again"}

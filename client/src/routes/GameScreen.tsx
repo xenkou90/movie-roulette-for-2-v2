@@ -130,14 +130,14 @@ function GameScreen() {
         <Button
           variant="secondary"
           size="lg"
-          disabled={pending}
+          pending={pending}
           onClick={() => decide(movie.id, "skip")}
         >
           Nope
         </Button>
         <Button
           size="lg"
-          disabled={pending}
+          pending={pending}
           onClick={() => decide(movie.id, "like")}
         >
           I&apos;m in
