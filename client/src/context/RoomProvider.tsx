@@ -11,6 +11,7 @@ import { useSocket } from "../hooks/useSocket";
 import { gameReducer, initialGameState } from "../game/gameReducer";
 import { RoomContext, type CurrentRoom } from "./RoomContext";
 import { matchHaptic } from "../lib/haptics";
+import { playMatchChime } from "../lib/sound";
 
 interface RoomProviderProps {
     children: ReactNode;
@@ -47,6 +48,7 @@ function RoomProvider({ children }: RoomProviderProps) {
 
         function handleMatched(payload: { movie: Movie }) {
             matchHaptic();
+            playMatchChime();
             dispatch({ type: "matched", movie: payload.movie });
         }
 
