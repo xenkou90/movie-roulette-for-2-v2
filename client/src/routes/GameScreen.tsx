@@ -11,6 +11,7 @@ import ConfirmDialog from "../components/ui/ConfirmDialog";
 import ExternalLinkButton from "../components/ui/ExternalLinkButton";
 import MovieMeta from "../components/movie/MovieMeta";
 import { decisionHaptic } from "../lib/haptics";
+import { primeAudio } from "../lib/sound";
 
 const noticeText: Record<GameNotice, string> = {
   partner_passed: "They passed on one of your picks.",
@@ -31,6 +32,7 @@ function GameScreen() {
 
   const choose = useCallback(
     (movieId: number, decision: Decision) => {
+      primeAudio();
       decisionHaptic(decision);
       decide(movieId, decision);
     },
