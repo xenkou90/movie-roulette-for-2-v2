@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router";
+import type { Decision } from "@movie-roulette/shared";
 import { useRoom } from "../hooks/useRoom";
 import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import type { GameNotice } from "../game/gameReducer";
 import { posterSrc, posterSrcSet } from "../lib/tmdbImage";
+import { imdbUrl, letterboxdUrl } from "../lib/movieLinks";
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
-import MovieMeta from "../components/movie/MovieMeta";
 import ExternalLinkButton from "../components/ui/ExternalLinkButton";
-import { imdbUrl, letterboxdUrl } from "../lib/movieLinks";
+import MovieMeta from "../components/movie/MovieMeta";
 
 const noticeText: Record<GameNotice, string> = {
   partner_passed: "They passed on one of your picks.",
@@ -24,6 +25,15 @@ function GameScreen() {
 
   const notice = game.status === "playing" ? game.notice : null;
   const noticeId = game.status === "playing" ? game.noticeId : 0;
+  const keyboardMovieId =
+    game.status === "playing" && !game.pending ? game.movie.id : null;
+
+  const choose = useCallback(
+    (movieId: number, decision: Decision) => {
+      decide(movieId, decision);
+    },
+    [decide],
+  );
 
   useEffect(() => {
     if (notice === null) return;
@@ -31,6 +41,35 @@ function GameScreen() {
     const timeout = setTimeout(clearNotice, 3000);
     return () => clearTimeout(timeout);
   }, [notice, noticeId, clearNotice]);
+
+  useEffect(() => {
+    if (keyboardMovieId === null || confirmingLeave) return;
+
+    const movieId = keyboardMovieId;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (
+        event.repeat ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      ) {
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        choose(movieId, "skip");
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        choose(movieId, "like");
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [keyboardMovieId, confirmingLeave, choose]);
 
   if (current === null || current.room.code !== code) {
     return (
@@ -55,7 +94,7 @@ function GameScreen() {
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-sm flex-col gap-3 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between gap-3">
         <Button
           variant="ghost"
           size="sm"
@@ -63,6 +102,12 @@ function GameScreen() {
         >
           Leave
         </Button>
+        <p
+          aria-hidden="true"
+          className="hidden text-xs opacity-60 [@media(hover:hover)_and_(pointer:fine)]:block"
+        >
+          ← Nope · → I&apos;m in
+        </p>
         <p className="text-xs uppercase tracking-widest opacity-60">
           Room {room.code}
         </p>
@@ -103,15 +148,13 @@ function GameScreen() {
         <h1 className="font-heading text-2xl leading-tight uppercase">
           {movie.title}
           {movie.releaseYear !== null && (
-            <span className="font-body text-base normal-case opacity-70">
+            <span className="font=body text-base normal-case opacity-70">
               {" "}
               ({movie.releaseYear})
             </span>
           )}
         </h1>
-
         <MovieMeta movie={movie} className="mt-1" />
-
         <p className="mt-2 line-clamp-3 text-sm">
           {movie.overview || "No synopsis available."}
         </p>
@@ -131,14 +174,16 @@ function GameScreen() {
           variant="secondary"
           size="lg"
           pending={pending}
-          onClick={() => decide(movie.id, "skip")}
+          aria-keyshortcuts="ArrowLeft"
+          onClick={() => choose(movie.id, "skip")}
         >
           Nope
         </Button>
         <Button
           size="lg"
           pending={pending}
-          onClick={() => decide(movie.id, "like")}
+          aria-keyshortcuts="ArrowRight"
+          onClick={() => choose(movie.id, "like")}
         >
           I&apos;m in
         </Button>
@@ -152,8 +197,7 @@ function GameScreen() {
         onCancel={() => setConfirmingLeave(false)}
         onConfirm={leave}
       >
-        {partnerName} will be left swiping alone — and the popcorn&apos;s barely
-        warm!
+        {partnerName} will be left swiping alone — and the popcorn&apos;s barely warm!
       </ConfirmDialog>
     </main>
   );
