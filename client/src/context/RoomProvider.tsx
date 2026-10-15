@@ -10,6 +10,7 @@ import type { Decision, Movie, RoomView } from "@movie-roulette/shared";
 import { useSocket } from "../hooks/useSocket";
 import { gameReducer, initialGameState } from "../game/gameReducer";
 import { RoomContext, type CurrentRoom } from "./RoomContext";
+import { matchHaptic } from "../lib/haptics";
 
 interface RoomProviderProps {
     children: ReactNode;
@@ -45,6 +46,7 @@ function RoomProvider({ children }: RoomProviderProps) {
         }
 
         function handleMatched(payload: { movie: Movie }) {
+            matchHaptic();
             dispatch({ type: "matched", movie: payload.movie });
         }
 
