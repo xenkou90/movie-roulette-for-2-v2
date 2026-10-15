@@ -78,7 +78,7 @@ function GameScreen() {
             width={500}
             height={750}
             alt={`Poster for ${movie.title}`}
-            className="aspect-[2/3] h-full max-w-full rounded-2xl border-3 border-ink bg-ink/10 object-cover shadow-brutal-lg"
+            className="aspect-[2/3] h-full max-w-full rounded-2xl border-3 border-ink bg-ink/10 object-cover shadow-brutal-lg motion-safe:animate-card-in"
           />
         ) : (
           <div className="flex aspect-[2/3] h-full max-w-full items-center justify-center rounded-2xl border-3 border-ink bg-surface p-4 text-center font-heading uppercase shadow-brutal-lg">
@@ -99,7 +99,7 @@ function GameScreen() {
         </div>
       </div>
 
-      <section className="text-center">
+      <section key={movie.id} className="text-center motion-safe:animate-card-in">
         <h1 className="font-heading text-2xl leading-tight uppercase">
           {movie.title}
           {movie.releaseYear !== null && (
