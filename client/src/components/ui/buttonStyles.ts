@@ -19,7 +19,8 @@ const baseStyles =
     "border-3 border-ink rounded-xl shadow-brutal " +
     "transition-transform duration-75 " +
     "active:translate-x-[3px] active:translate-y-[3px] active:shadow-none " +
-    "disabled:opacity-50 disabled:pointer-events-none " +
+    "disabled:cursor-not-allowed disabled:border-ink/30 disabled:bg-surface disabled:text-ink/40 disabled:shadow-none " +
+    "aria-disabled:translate-x-[3px] aria-disabled:translate-y-[3px] aria-disabled:shadow-none aria-disabled:cursor-wait " +
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 export function buttonClasses(variant: ButtonVariant, size: ButtonSize): string {
