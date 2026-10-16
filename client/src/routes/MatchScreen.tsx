@@ -8,6 +8,7 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import ExternalLinkButton from "../components/ui/ExternalLinkButton";
 import MovieMeta from "../components/movie/MovieMeta";
+import { pageTitle } from "../lib/pageTitle";
 
 function MatchScreen() {
   const { code } = useParams();
@@ -50,6 +51,8 @@ function MatchScreen() {
 
   return (
     <Screen>
+      <title>{pageTitle("It's a match!")}</title>
+
       <Card className="flex flex-col items-center gap-3 text-center">
         <p className="-rotate-3 rounded-lg border-3 border-ink bg-brand-yellow px-4 py-1 font-heading text-xl uppercase shadow-brutal motion-safe:animate-pop">
           It&apos;s a match!

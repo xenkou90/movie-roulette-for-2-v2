@@ -6,6 +6,7 @@ import { joinLink } from "../lib/joinLink";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import { pageTitle } from "../lib/pageTitle";
 
 type CopyTarget = "code" | "link" | "share";
 
@@ -19,6 +20,8 @@ function WaitingRoom() {
   if (current === null || current.room.code !== code) {
     return (
       <Screen>
+        <title>{pageTitle("Room unavailable")}</title>
+
         <Card className="text-center">
           <h1 className="font-heading text-2xl uppercase">
             You&apos;re not in this room
@@ -102,6 +105,8 @@ function WaitingRoom() {
 
   return (
     <Screen>
+      <title>{pageTitle(`Room ${room.code}`)}</title>
+
       <Card className="flex flex-col items-center gap-5 text-center">
         <h1 className="font-heading text-3xl uppercase">
           {isHost ? "Your Room" : "Joined!"}

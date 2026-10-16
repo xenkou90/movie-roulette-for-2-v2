@@ -7,6 +7,7 @@ import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import { pageTitle } from "../lib/pageTitle";
 
 function CreateRoom() {
   const navigate = useNavigate();
@@ -46,6 +47,8 @@ function CreateRoom() {
 
   return (
     <Screen>
+      <title>{pageTitle("Create a room")}</title>
+
       <Card>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <h1 className="text-center font-heading text-3xl uppercase">

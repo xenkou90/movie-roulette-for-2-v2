@@ -4,6 +4,7 @@ import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import HowToPlayDialog from "../components/home/HowToPlayDialog";
+import { pageTitle } from "../lib/pageTitle";
 
 function Home() {
     const navigate = useNavigate();
@@ -11,6 +12,8 @@ function Home() {
 
     return (
         <Screen>
+            <title>{pageTitle()}</title>
+
             <div className="flex gap-2" aria-hidden="true">
                 <span className="h-3 w-3 rounded-full border-2 border-ink bg-brand-pink" />
                 <span className="h-3 w-3 rounded-full border-2 border-ink bg-brand-yellow" />

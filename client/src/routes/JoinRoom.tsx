@@ -12,6 +12,7 @@ import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import { pageTitle } from "../lib/pageTitle";
 
 const errorMessages: Record<RoomErrorCode, string> = {
   invalid_name: "That name won't work. Try something shorter.",
@@ -66,6 +67,8 @@ function JoinRoom() {
 
   return (
     <Screen>
+      <title>{pageTitle("Enter a room")}</title>
+
       <Card>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <h1 className="text-center font-heading text-3xl uppercase">

@@ -12,6 +12,7 @@ import ExternalLinkButton from "../components/ui/ExternalLinkButton";
 import MovieMeta from "../components/movie/MovieMeta";
 import { decisionHaptic } from "../lib/haptics";
 import { primeAudio } from "../lib/sound";
+import { pageTitle } from "../lib/pageTitle";
 
 const noticeText: Record<GameNotice, string> = {
   partner_passed: "They passed on one of your picks.",
@@ -98,6 +99,8 @@ function GameScreen() {
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-sm flex-col gap-3 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <title>{pageTitle("Picking a movie")}</title>
+
       <header className="flex items-center justify-between gap-3">
         <Button
           variant="ghost"
