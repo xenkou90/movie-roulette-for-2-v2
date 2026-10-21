@@ -7,9 +7,11 @@ export interface PlayerView {
   name: string;
 }
 
+export type RoomPlayerView = PlayerView & { connected: boolean };
+
 export interface RoomView {
   code: string;
-  players: PlayerView[];
+  players: RoomPlayerView[];
 }
 
 export type RoomErrorCode =
@@ -20,8 +22,17 @@ export type RoomErrorCode =
   | "already_in_room";
 
 export type RoomResult =
-  | { ok: true; room: RoomView; you: PlayerView }
+  | { ok: true; room: RoomView; you: PlayerView; token: string }
   | { ok: false; error: RoomErrorCode };
+
+export type GameSnapshot =
+  | { status: "none" }
+  | { status: "playing"; movie: Movie }
+  | { status: "matched"; movie: Movie; readyPlayerIds: string[] };
+
+export type ResumeResult =
+  | { ok: true; room: RoomView; you: PlayerView; game: GameSnapshot }
+  | { ok: false; error: "session_not_found" };
 
 export type GameErrorCode =
   | "no_active_game"
@@ -50,6 +61,7 @@ export interface ServerToClientEvents {
   "server:hello": (payload: ServerHelloPayload) => void;
   "room:updated": (room: RoomView) => void;
   "room:playerLeft": (payload: { playerId: string; name: string }) => void;
+  "session:replaced": () => void;
   "game:started": (payload: { movie: Movie }) => void;
   "game:matched": (payload: { movie: Movie }) => void;
   "game:movieDetails": (payload: { movie: Movie }) => void;
@@ -69,6 +81,10 @@ export interface ClientToServerEvents {
     ack: (result: RoomResult) => void,
   ) => void;
   "room:leave": (ack: (result: { ok: true }) => void) => void;
+  "session:resume": (
+    payload: { code: string; token: string },
+    ack: (result: ResumeResult) => void,
+  ) => void;
   "game:decide": (
     payload: { movieId: number; decision: Decision },
     ack: (result: DecideResult) => void,
@@ -77,6 +93,6 @@ export interface ClientToServerEvents {
 }
 
 export interface SocketData {
-  roomCode?: string;
+  roomCode?: string,
   playerId?: string;
 }

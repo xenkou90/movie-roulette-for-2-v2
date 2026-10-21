@@ -1,17 +1,25 @@
 import type { RoomView } from "@movie-roulette/shared";
+import { env } from "../config/env.js";
 import { startGame } from "../game/handlers.js";
+import { snapshotFor } from "../game/snapshot.js";
 import type { AppServer, AppSocket } from "../socket/types.js";
 import {
     MAX_PLAYERS,
     createRoom,
     findPlayer,
+    findPlayerByToken,
     generateRoomCode,
     getRoom,
     joinRoom,
     removePlayer,
+    type Player,
     type Room,
 } from "./store.js";
-import { normalisePlayerName, normaliseRoomCode } from "./validation.js";
+import {
+    isPlausibleToken,
+    normalisePlayerName,
+    normaliseRoomCode,
+} from "./validation.js";
 
 export function toRoomView(room: Room): RoomView {
     return {
@@ -19,36 +27,65 @@ export function toRoomView(room: Room): RoomView {
         players: room.players.map((player) => ({
             id: player.id,
             name: player.name,
+            connected: player.socketId !== null,
         })),
     };
 }
 
-function leaveCurrentRoom(io: AppServer, socket: AppSocket): void {
+function ownedSeat(socket: AppSocket): { room: Room; player: Player } | undefined {
     const code = socket.data.roomCode;
     const playerId = socket.data.playerId;
-
-    if (code === undefined || playerId === undefined) return;
+    if (code === undefined || playerId === undefined) return undefined;
 
     const room = getRoom(code);
-    const name = room === undefined ? undefined : findPlayer(room, playerId)?.name;
+    if (room === undefined) return undefined;
 
-    const remaining = removePlayer(code, playerId);
-    void socket.leave(code);
+    const player = findPlayer(room, playerId);
+    if (player === undefined || player.socketId !== socket.id) return undefined;
 
-    socket.data.roomCode = undefined;
-    socket.data.playerId = undefined;
+    return { room, player };
+}
+
+function releaseSeat(io: AppServer, room: Room, player: Player): void {
+    clearTimeout(player.graceTimer);
+
+    const remaining = removePlayer(room.code, player.id);
 
     if (remaining !== undefined) {
         remaining.game = undefined;
-
-        io.to(code).emit("room:playerLeft", {
-            playerId,
-            name: name ?? "A player",
+        io.to(room.code).emit("room:playerLeft", {
+            playerId: player.id,
+            name: player.name,
         });
-        io.to(code).emit("room:updated", toRoomView(remaining));
+        io.to(room.code).emit("room:updated", toRoomView(remaining));
     }
 
-    console.log(`[room] player ${playerId} left ${code}`);
+    console.log(`[room] player ${player.id} left ${room.code}`);
+}
+
+function holdSeat(io: AppServer, room: Room, player: Player): void {
+    player.socketId = null;
+    io.to(room.code).emit("room:updated", toRoomView(room));
+
+    player.graceTimer = setTimeout(() => {
+        const stillSeated =
+            getRoom(room.code) === room && findPlayer(room, player.id) === player;
+
+        if (stillSeated && player.socketId === null) {
+            releaseSeat(io, room, player);
+        }
+    }, env.resumeGraceMs);
+
+    console.log(`[room] player ${player.id} disconnected from ${room.code}; holding seat`);
+}
+
+function forgetRoom(socket: AppSocket): void {
+    const code = socket.data.roomCode;
+    if (code !== undefined) {
+        void socket.leave(code);
+    }
+    socket.data.roomCode = undefined;
+    socket.data.playerId = undefined;
 }
 
 export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
@@ -77,6 +114,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
             ok: true,
             room: toRoomView(room),
             you: { id: player.id, name: player.name },
+            token: player.token,
         });
     });
 
@@ -119,6 +157,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
             ok: true,
             room: view,
             you: { id: player.id, name: player.name },
+            token: player.token,
         });
 
         socket.to(roomCode).emit("room:updated", view);
@@ -130,12 +169,65 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
         }
     });
 
+    socket.on("session:resume", ({ code, token }, ack) => {
+        if (socket.data.roomCode !== undefined) {
+            ack({ ok: false, error: "session_not_found" });
+            return;
+        }
+
+        const roomCode = normaliseRoomCode(code);
+        if (roomCode === null || !isPlausibleToken(token)) {
+            ack({ ok: false, error: "session_not_found" });
+            return;
+        }
+
+        const room = getRoom(roomCode);
+        const player = room === undefined ? undefined : findPlayerByToken(room, token);
+
+        if (room === undefined || player === undefined) {
+            ack({ ok: false, error: "session_not_found" });
+            return;
+        }
+
+        clearTimeout(player.graceTimer);
+        player.graceTimer = undefined;
+
+        const previousSocketId = player.socketId;
+        player.socketId = socket.id;
+
+        if (previousSocketId !== null && previousSocketId !== socket.id) {
+            io.to(previousSocketId).emit("session:replaced");
+            io.in(previousSocketId).disconnectSockets(true);
+        }
+
+        void socket.join(room.code);
+        socket.data.roomCode = room.code;
+        socket.data.playerId = player.id;
+
+        ack({
+            ok: true,
+            room: toRoomView(room),
+            you: { id: player.id, name: player.name },
+            game: snapshotFor(room, player.id),
+        });
+
+        socket.to(room.code).emit("room:updated", toRoomView(room));
+        console.log(`[room] player ${player.id} resumed in ${room.code}`);
+    });
+
     socket.on("room:leave", (ack) => {
-        leaveCurrentRoom(io, socket);
+        const seat = ownedSeat(socket);
+        if (seat !== undefined) {
+            releaseSeat(io, seat.room, seat.player);
+        }
+        forgetRoom(socket);
         ack({ ok: true });
     });
 
     socket.on("disconnect", () => {
-        leaveCurrentRoom(io, socket);
+        const seat = ownedSeat(socket);
+        if (seat !== undefined) {
+            holdSeat(io, seat.room, seat.player);
+        }
     });
 }

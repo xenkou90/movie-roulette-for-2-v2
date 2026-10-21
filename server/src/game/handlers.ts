@@ -25,7 +25,7 @@ function currentSeat(socket: AppSocket): { room: Room; player: Player } | undefi
 
 function notifyPartners(io: AppServer, room: Room, deciderId: string): void {
     for (const player of room.players) {
-        if (player.id !== deciderId) {
+        if (player.id !== deciderId && player.socketId !== null) {
             io.to(player.socketId).emit("game:partnerPassed");
         }
     }
@@ -81,9 +81,12 @@ export async function startGame(
     console.log(`[game] started in ${room.code}`);
 
     for (const player of room.players) {
+        const socketId = player.socketId;
+        if (socketId === null) continue;
+
         sendDetailsWhenReady(
             io,
-            player.socketId,
+            socketId,
             first,
             () =>
                 isStillCurrent(room, session) &&
