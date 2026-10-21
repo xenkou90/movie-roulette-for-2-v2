@@ -34,11 +34,11 @@ function MatchScreen() {
 
   const { movie, readyPlayerIds } = game;
   const partner = room.players.find(
-    (player) => player.socketId !== you.socketId,
+    (player) => player.id !== you.id,
   );
-  const youReady = readyPlayerIds.includes(you.socketId);
+  const youReady = readyPlayerIds.includes(you.id);
   const partnerReady =
-    partner !== undefined && readyPlayerIds.includes(partner.socketId);
+    partner !== undefined && readyPlayerIds.includes(partner.id);
 
   let rematchStatus = "";
   if (partner === undefined) {

@@ -47,8 +47,8 @@ function WaitingRoom() {
     return <Navigate to={`/room/${room.code}/match`} replace />;
   }
 
-  const partner = room.players.find((player) => player.socketId !== you.socketId);
-  const isHost = room.players[0]?.socketId === you.socketId;
+  const partner = room.players.find((player) => player.id !== you.id);
+  const isHost = room.players[0]?.id === you.id;
   const inviteUrl = joinLink(room.code);
 
   function buttonLabel(target: CopyTarget, idle: string, done: string): string {
@@ -163,9 +163,9 @@ function WaitingRoom() {
 
         <ul className="w-full border-t-2 border-ink/10 pt-4">
           {room.players.map((player) => (
-            <li key={player.socketId} className="font-heading text-xl">
+            <li key={player.id} className="font-heading text-xl">
               {player.name}
-              {player.socketId === you.socketId && (
+              {player.id === you.id && (
                 <span className="font-body text-xs opacity-60"> (you)</span>
               )}
             </li>

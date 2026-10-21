@@ -3,7 +3,7 @@ import type { Movie } from "./movie.js";
 export type Decision = "skip" | "like";
 
 export interface PlayerView {
-  socketId: string;
+  id: string;
   name: string;
 }
 
@@ -49,7 +49,7 @@ export interface PingResult {
 export interface ServerToClientEvents {
   "server:hello": (payload: ServerHelloPayload) => void;
   "room:updated": (room: RoomView) => void;
-  "room:playerLeft": (payload: { socketId: string; name: string }) => void;
+  "room:playerLeft": (payload: { playerId: string; name: string }) => void;
   "game:started": (payload: { movie: Movie }) => void;
   "game:matched": (payload: { movie: Movie }) => void;
   "game:movieDetails": (payload: { movie: Movie }) => void;
@@ -78,5 +78,5 @@ export interface ClientToServerEvents {
 
 export interface SocketData {
   roomCode?: string;
-  playerName?: string;
+  playerId?: string;
 }
