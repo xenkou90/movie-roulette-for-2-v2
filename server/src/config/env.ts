@@ -12,8 +12,21 @@ function optional(name: string, fallback: string): string {
   return value === undefined || value.trim() === "" ? fallback : value;
 }
 
+function optionalPositiveInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === "") return fallback;
+
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) {
+    console.error(`Environment variable ${name} must be a positive whole number`);
+    process.exit(1);
+  }
+  return value;
+}
+
 export const env = {
   tmdbApiKey: required("TMDB_API_KEY"),
-  port: Number(optional("PORT", "3001")),
-  clientUrl: optional("CLIENT_URL", "http://localhost:5173"),
+  port: optionalPositiveInt("PORT", 3001),
+  clientUrl: optional("CLIENT_URL", "http://loclahost:5173"),
+  resumeGraceMs: optionalPositiveInt("RESUME_GRACE_MS", 90_000),
 } as const;

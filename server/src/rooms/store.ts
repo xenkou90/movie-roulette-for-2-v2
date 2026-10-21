@@ -1,11 +1,13 @@
-import { randomInt, randomUUID } from "node:crypto";
+import { randomBytes, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
 import { ROOM_CODE_LENGTH } from "@movie-roulette/shared";
 import type { GameSession } from "../game/session.js";
 
 export interface Player {
     id: string;
+    token: string;
     name: string;
-    socketId: string;
+    socketId: string | null;
+    graceTimer?: NodeJS.Timeout;
 }
 
 export interface Room {
@@ -23,6 +25,7 @@ export type JoinResult =
 
 export const MAX_PLAYERS = 2;
 const MAX_CODE_ATTEMPTS = 50;
+const TOKEN_BYTES = 32;
 
 const rooms = new Map<string, Room>();
 
@@ -42,7 +45,18 @@ export function generateRoomCode(): string {
 }
 
 function newPlayer(name: string, socketId: string): Player {
-    return { id: randomUUID(), name, socketId };
+    return {
+        id: randomUUID(),
+        token: randomBytes(TOKEN_BYTES).toString("base64url"),
+        name,
+        socketId,
+    };
+}
+
+function tokensMatch(a: string, b: string): boolean {
+    const left = Buffer.from(a);
+    const right = Buffer.from(b);
+    return left.length === right.length && timingSafeEqual(left, right);
 }
 
 export function createRoom(
@@ -83,6 +97,10 @@ export function joinRoom(
 
 export function findPlayer(room: Room, playerId: string): Player | undefined {
     return room.players.find((player) => player.id === playerId);
+}
+
+export function findPlayerByToken(room: Room, token: string): Player | undefined {
+    return room.players.find((player) => tokensMatch(player.token, token));
 }
 
 export function removePlayer(code: string, playerId: string): Room | undefined {

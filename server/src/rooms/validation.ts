@@ -18,3 +18,9 @@ export function normaliseRoomCode(value: unknown): string | null {
 
   return ROOM_CODE_REGEX.test(trimmed) ? trimmed : null;
 }
+
+const TOKEN_PATTERN = /^[A-Za-z0-9_-]{20,128}$/;
+
+export function isPlausibleToken(value: unknown): value is string {
+  return typeof value === "string" && TOKEN_PATTERN.test(value);
+}
