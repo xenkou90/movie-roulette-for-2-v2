@@ -1,10 +1,11 @@
-import { randomInt } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import { ROOM_CODE_LENGTH } from "@movie-roulette/shared";
 import type { GameSession } from "../game/session.js";
 
 export interface Player {
-    socketId: string;
+    id: string;
     name: string;
+    socketId: string;
 }
 
 export interface Room {
@@ -17,7 +18,7 @@ export interface Room {
 export type JoinFailure = "room_not_found" | "room_full";
 
 export type JoinResult =
-    | { ok: true; room: Room }
+    | { ok: true; room: Room; player: Player }
     | { ok: false; reason: JoinFailure };
 
 export const MAX_PLAYERS = 2;
@@ -40,18 +41,31 @@ export function generateRoomCode(): string {
     throw new Error("Could not generate an unused room code");
 }
 
-export function createRoom(code: string, host: Player): Room {
+function newPlayer(name: string, socketId: string): Player {
+    return { id: randomUUID(), name, socketId };
+}
+
+export function createRoom(
+    code: string,
+    hostName: string,
+    socketId: string,
+): { room: Room; player: Player } {
+    const player = newPlayer(hostName, socketId);
     const room: Room = {
         code,
-        players: [host],
+        players: [player],
         createdAt: Date.now(),
     };
 
     rooms.set(code, room);
-    return room;
+    return { room, player };
 }
 
-export function joinRoom(code: string, player: Player): JoinResult {
+export function joinRoom(
+    code: string,
+    name: string,
+    socketId: string,
+): JoinResult {
     const room = rooms.get(code);
 
     if (room === undefined) {
@@ -62,15 +76,20 @@ export function joinRoom(code: string, player: Player): JoinResult {
         return { ok: false, reason: "room_full" };
     }
 
+    const player = newPlayer(name, socketId);
     room.players.push(player);
-    return { ok: true, room };
+    return { ok: true, room, player };
 }
 
-export function removePlayer(code: string, socketId: string): Room | undefined {
+export function findPlayer(room: Room, playerId: string): Player | undefined {
+    return room.players.find((player) => player.id === playerId);
+}
+
+export function removePlayer(code: string, playerId: string): Room | undefined {
     const room = rooms.get(code);
     if (room === undefined) return undefined;
 
-    room.players = room.players.filter((player) => player.socketId !== socketId);
+    room.players = room.players.filter((player) => player.id !== playerId);
 
     if (room.players.length === 0) {
         rooms.delete(code);

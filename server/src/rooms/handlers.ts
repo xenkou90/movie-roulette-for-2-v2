@@ -4,18 +4,20 @@ import type { AppServer, AppSocket } from "../socket/types.js";
 import {
     MAX_PLAYERS,
     createRoom,
+    findPlayer,
     generateRoomCode,
+    getRoom,
     joinRoom,
     removePlayer,
     type Room,
 } from "./store.js";
 import { normalisePlayerName, normaliseRoomCode } from "./validation.js";
 
-function toRoomView(room: Room): RoomView {
+export function toRoomView(room: Room): RoomView {
     return {
         code: room.code,
         players: room.players.map((player) => ({
-            socketId: player.socketId,
+            id: player.id,
             name: player.name,
         })),
     };
@@ -23,27 +25,30 @@ function toRoomView(room: Room): RoomView {
 
 function leaveCurrentRoom(io: AppServer, socket: AppSocket): void {
     const code = socket.data.roomCode;
-    const name = socket.data.playerName;
+    const playerId = socket.data.playerId;
 
-    if (code === undefined) return;
+    if (code === undefined || playerId === undefined) return;
 
-    const remaining = removePlayer(code, socket.id);
+    const room = getRoom(code);
+    const name = room === undefined ? undefined : findPlayer(room, playerId)?.name;
+
+    const remaining = removePlayer(code, playerId);
     void socket.leave(code);
 
     socket.data.roomCode = undefined;
-    socket.data.playerName = undefined;
+    socket.data.playerId = undefined;
 
     if (remaining !== undefined) {
         remaining.game = undefined;
 
         io.to(code).emit("room:playerLeft", {
-            socketId: socket.id,
+            playerId,
             name: name ?? "A player",
         });
         io.to(code).emit("room:updated", toRoomView(remaining));
     }
 
-    console.log(`[room] ${socket.id} left ${code}`);
+    console.log(`[room] player ${playerId} left ${code}`);
 }
 
 export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
@@ -60,18 +65,18 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
         }
 
         const code = generateRoomCode();
-        const room = createRoom(code, { socketId: socket.id, name: playerName });
+        const { room, player } = createRoom(code, playerName, socket.id);
 
         void socket.join(code);
         socket.data.roomCode = code;
-        socket.data.playerName = playerName;
+        socket.data.playerId = player.id;
 
         console.log(`[room] ${playerName} created ${code}`);
 
         ack({
             ok: true,
             room: toRoomView(room),
-            you: { socketId: socket.id, name: playerName },
+            you: { id: player.id, name: player.name },
         });
     });
 
@@ -93,34 +98,33 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
             return;
         }
 
-        const result = joinRoom(roomCode, {
-            socketId: socket.id,
-            name: playerName,
-        });
+        const result = joinRoom(roomCode, playerName, socket.id);
 
         if (!result.ok) {
             ack({ ok: false, error: result.reason });
             return;
         }
 
+        const { room, player } = result;
+
         void socket.join(roomCode);
         socket.data.roomCode = roomCode;
-        socket.data.playerName= playerName;
+        socket.data.playerId = player.id;
 
         console.log(`[room] ${playerName} joined ${roomCode}`);
 
-        const view = toRoomView(result.room);
+        const view = toRoomView(room);
 
         ack({
             ok: true,
             room: view,
-            you: { socketId: socket.id, name: playerName },
+            you: { id: player.id, name: player.name },
         });
 
         socket.to(roomCode).emit("room:updated", view);
 
-        if (result.room.players.length === MAX_PLAYERS) {
-            startGame(io, result.room).catch((error: unknown) => {
+        if (room.players.length === MAX_PLAYERS) {
+            startGame(io, room).catch((error: unknown) => {
                 console.error(`[game] unexpected error starting ${roomCode}`, error);
             });
         }

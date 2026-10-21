@@ -94,7 +94,7 @@ function GameScreen() {
 
   const { movie, pending } = game;
   const partnerName =
-    room.players.find((player) => player.socketId !== you.socketId)?.name ??
+    room.players.find((player) => player.id !== you.id)?.name ??
     "Your friend";
 
   return (

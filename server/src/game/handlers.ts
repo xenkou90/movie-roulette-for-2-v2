@@ -1,4 +1,4 @@
-import { MAX_PLAYERS, getRoom, type Room } from "../rooms/store.js";
+import { MAX_PLAYERS, findPlayer, getRoom, type Player, type Room} from "../rooms/store.js";
 import type { AppServer, AppSocket } from "../socket/types.js";
 import { withDetails } from "../tmdb/detailsCache.js";
 import { prefetchDetails, sendDetailsWhenReady } from "./details.js";
@@ -11,14 +11,21 @@ function isStillCurrent(room: Room, session: GameSession): boolean {
     return getRoom(room.code) === room && room.game === session;
 }
 
-function currentRoom(socket: AppSocket): Room | undefined {
+function currentSeat(socket: AppSocket): { room: Room; player: Player } | undefined {
     const code = socket.data.roomCode;
-    return code === undefined ? undefined : getRoom(code);
+    const playerId = socket.data.playerId;
+    if (code === undefined || playerId === undefined) return undefined;
+
+    const room = getRoom(code);
+    if (room === undefined) return undefined;
+
+    const player = findPlayer(room, playerId);
+    return player === undefined ? undefined : { room, player };
 }
 
 function notifyPartners(io: AppServer, room: Room, deciderId: string): void {
     for (const player of room.players) {
-        if (player.socketId !== deciderId) {
+        if (player.id !== deciderId) {
             io.to(player.socketId).emit("game:partnerPassed");
         }
     }
@@ -37,7 +44,7 @@ export async function startGame(
 ): Promise<void> {
     const session: GameSession = {
         status: "loading",
-        state: createGameState(room.players.map((player) => player.socketId)),
+        state: createGameState(room.players.map((player) => player.id)),
         queue: createQueue(excludeIds),
         rematchReady: new Set(),
     };
@@ -57,7 +64,7 @@ export async function startGame(
     }
 
     if (!isStillCurrent(room, session)) {
-        console.log(`[game] start for ${room.code} was superseded while loading`);
+        console.log(`[game]start for ${room.code} was superseded while loading`);
         return;
     }
 
@@ -80,7 +87,7 @@ export async function startGame(
             first,
             () =>
                 isStillCurrent(room, session) &&
-                getIndex(session.state, player.socketId) === 0,
+                getIndex(session.state, player.id) === 0,
         );
     }
 
@@ -89,17 +96,15 @@ export async function startGame(
 
 export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
     socket.on("game:decide", async ({ movieId, decision }, ack) => {
-        const room = currentRoom(socket);
-        const session = room?.game;
+        const seat = currentSeat(socket);
+        const session = seat?.room.game;
 
-        if (
-            room === undefined ||
-            session === undefined ||
-            session.status !== "playing"
-        ) {
+        if (seat === undefined || session === undefined || session.status !== "playing") {
             ack({ ok: false, error: "no_active_game" });
             return;
         }
+
+        const { room, player } = seat;
 
         if (session.state.matchedMovieId !== null) {
             ack({ ok: false, error: "game_over" });
@@ -111,7 +116,7 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
             return;
         }
 
-        const index = getIndex(session.state, socket.id);
+        const index = getIndex(session.state, player.id);
         const current = session.queue.movies[index];
 
         if (current === undefined || current.id !== movieId) {
@@ -138,7 +143,7 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
                 return;
             }
 
-            if (getIndex(session.state, socket.id) !== index) {
+            if (getIndex(session.state, player.id) !== index) {
                 ack({ ok: false, error: "stale_decision" });
                 return;
             }
@@ -153,7 +158,7 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
             return;
         }
 
-        const outcome = applyDecision(session.state, socket.id, current.id, decision);
+        const outcome = applyDecision(session.state, player.id, current.id, decision);
 
         switch (outcome.type) {
             case "match":
@@ -173,7 +178,7 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
                 ack({ ok: false, error: "no_active_game" });
                 return;
             case "partner_passed":
-                notifyPartners(io, room, socket.id);
+                notifyPartners(io, room, player.id);
                 break;
             case "partner_already_passed":
             case "advance":
@@ -196,18 +201,18 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
             next,
             () =>
                 isStillCurrent(room, session) &&
-                getIndex(session.state, socket.id) === nextIndex,
+                getIndex(session.state, player.id) === nextIndex,
         );
 
         prefetchDetails(session.queue, nextIndex + 1);
     });
 
     socket.on("game:rematch", (ack) => {
-        const room = currentRoom(socket);
-        const session = room?.game;
+        const seat = currentSeat(socket);
+        const session = seat?.room.game;
 
         if (
-            room === undefined ||
+            seat === undefined ||
             session === undefined ||
             session.state.matchedMovieId === null
         ) {
@@ -215,7 +220,9 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
             return;
         }
 
-        session.rematchReady.add(socket.id);
+        const { room, player } = seat;
+
+        session.rematchReady.add(player.id);
         ack({ ok: true });
 
         io.to(room.code).emit("game:rematchStatus", {
@@ -224,7 +231,7 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
 
         const everyoneReady =
             room.players.length === MAX_PLAYERS &&
-            room.players.every((player) => session.rematchReady.has(player.socketId));
+            room.players.every((member) => session.rematchReady.has(member.id));
 
         if (everyoneReady) {
             startGame(io, room, session.queue.seenIds).catch((error: unknown) => {
