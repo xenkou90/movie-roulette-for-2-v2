@@ -3,18 +3,29 @@ import { useRoom } from "../hooks/useRoom";
 import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import { posterSrc } from "../lib/tmdbImage";
 import { imdbUrl, letterboxdUrl } from "../lib/movieLinks";
+import { pageTitle } from "../lib/pageTitle";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import ExternalLinkButton from "../components/ui/ExternalLinkButton";
 import MovieMeta from "../components/movie/MovieMeta";
-import { pageTitle } from "../lib/pageTitle";
+import ReconnectingScreen from "../components/room/ReconnectingScreen";
 
 function MatchScreen() {
   const { code } = useParams();
-  const { current, game, lastDeparture, requestRematch, returnToRoom } =
-    useRoom();
+  const {
+    current,
+    game,
+    lastDeparture,
+    requestRematch,
+    returnToRoom,
+    isRestoring,
+  } = useRoom();
   const leave = useLeaveRoom();
+
+  if (current === null && isRestoring) {
+    return <ReconnectingScreen />;
+  }
 
   if (current === null || current.room.code !== code) {
     return (
@@ -33,9 +44,7 @@ function MatchScreen() {
   }
 
   const { movie, readyPlayerIds } = game;
-  const partner = room.players.find(
-    (player) => player.id !== you.id,
-  );
+  const partner = room.players.find((player) => player.id !== you.id);
   const youReady = readyPlayerIds.includes(you.id);
   const partnerReady =
     partner !== undefined && readyPlayerIds.includes(partner.id);
@@ -52,7 +61,6 @@ function MatchScreen() {
   return (
     <Screen>
       <title>{pageTitle("It's a match!")}</title>
-
       <Card className="flex flex-col items-center gap-3 text-center">
         <p className="-rotate-3 rounded-lg border-3 border-ink bg-brand-yellow px-4 py-1 font-heading text-xl uppercase shadow-brutal motion-safe:animate-pop">
           It&apos;s a match!
@@ -68,8 +76,8 @@ function MatchScreen() {
           />
         )}
 
-        <div className="motion-safe:animate-rise motion-safe:[anomation-delay:300ms]">
-          <h1 className="font=heading text-2xl leading-tight uppercase">
+        <div className="motion-safe:animate-rise motion-safe:[animation-delay:300ms]">
+          <h1 className="font-heading text-2xl leading-tight uppercase">
             {movie.title}
             {movie.releaseYear !== null && (
               <span className="font-body text-base normal-case opacity-70">

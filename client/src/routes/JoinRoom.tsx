@@ -55,7 +55,7 @@ function JoinRoom() {
 
     socket.emit("room:join", { code, name: trimmedName }, (result) => {
       if (result.ok) {
-        enterRoom({ room: result.room, you: result.you });
+        enterRoom({ room: result.room, you: result.you }, result.token);
         navigate(`/room/${result.room.code}/wait`);
         return;
       }
