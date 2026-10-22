@@ -1,174 +1,227 @@
 import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useReducer,
-    useState,
-    type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+  type ReactNode,
 } from "react";
 import type { Decision, Movie, RoomView } from "@movie-roulette/shared";
 import { useSocket } from "../hooks/useSocket";
 import { gameReducer, initialGameState } from "../game/gameReducer";
-import { RoomContext, type CurrentRoom } from "./RoomContext";
 import { matchHaptic } from "../lib/haptics";
 import { playMatchChime } from "../lib/sound";
+import { clearSession, loadSession, saveSession } from "../lib/session";
+import { RoomContext, type CurrentRoom, type ExitReason } from "./RoomContext";
 
 interface RoomProviderProps {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 function RoomProvider({ children }: RoomProviderProps) {
-    const { socket } = useSocket();
-    const [current, setCurrent] = useState<CurrentRoom | null>(null);
-    const [lastDeparture, setLastDeparture] = useState<string | null>(null);
-    const [game, dispatch] = useReducer(gameReducer, initialGameState);
+  const { socket } = useSocket();
+  const [current, setCurrent] = useState<CurrentRoom | null>(null);
+  const [lastDeparture, setLastDeparture] = useState<string | null>(null);
+  const [exitReason, setExitReason] = useState<ExitReason | null>(null);
+  const [isRestoring, setIsRestoring] = useState(() => loadSession() !== null);
+  const [game, dispatch] = useReducer(gameReducer, initialGameState);
 
-    useEffect(() => {
-        function handleUpdated(room: RoomView) {
-            setCurrent((prev) =>
-            prev !== null && prev.room.code === room.code
-                ? { ...prev, room }
-                : prev,
-            );
+  useEffect(() => {
+    function handleConnect() {
+      const stored = loadSession();
+
+      if (stored === null) {
+        setIsRestoring(false);
+        return;
+      }
+
+      setIsRestoring(true);
+
+      socket.emit("session:resume", stored, (result) => {
+        setIsRestoring(false);
+
+        if (!result.ok) {
+          clearSession();
+          setCurrent(null);
+          setExitReason("expired");
+          dispatch({ type: "reset" });
+          return;
         }
 
-        function handlePlayerLeft(payload: { playerId: string; name: string }) {
-            setLastDeparture(payload.name);
-            dispatch({ type: "partnerLeft" });
+        setCurrent({ room: result.room, you: result.you });
+        setExitReason(null);
+        dispatch({ type: "restored", snapshot: result.game });
+      });
+    }
+
+    function handleDisconnect(reason: string) {
+      if (reason === "io server disconnect") {
+        // The server only closes a connection itself when another tab has taken
+        // over this seat. Socket.IO won't reconnect automatically in that case,
+        // so reconnect now — without a session, as a fresh connection.
+        socket.connect();
+      }
+    }
+
+    function handleReplaced() {
+      clearSession();
+      setCurrent(null);
+      setExitReason("replaced");
+      dispatch({ type: "reset" });
+    }
+
+    function handleUpdated(room: RoomView) {
+      setCurrent((prev) =>
+        prev !== null && prev.room.code === room.code
+          ? { ...prev, room }
+          : prev,
+      );
+    }
+
+    function handlePlayerLeft(payload: { playerId: string; name: string }) {
+      setLastDeparture(payload.name);
+      dispatch({ type: "partnerLeft" });
+    }
+
+    function handleStarted(payload: { movie: Movie }) {
+      dispatch({ type: "started", movie: payload.movie });
+    }
+
+    function handleMatched(payload: { movie: Movie }) {
+      matchHaptic();
+      playMatchChime();
+      dispatch({ type: "matched", movie: payload.movie });
+    }
+
+    function handleMovieDetails(payload: { movie: Movie }) {
+      dispatch({ type: "movieDetails", movie: payload.movie });
+    }
+
+    function handleRematchStatus(payload: { readyPlayerIds: string[] }) {
+      dispatch({ type: "rematchStatus", readyPlayerIds: payload.readyPlayerIds });
+    }
+
+    function handlePartnerPassed() {
+      dispatch({ type: "partnerPassed" });
+    }
+
+    function handleUnavailable() {
+      dispatch({ type: "unavailable" });
+    }
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("session:replaced", handleReplaced);
+    socket.on("room:updated", handleUpdated);
+    socket.on("room:playerLeft", handlePlayerLeft);
+    socket.on("game:started", handleStarted);
+    socket.on("game:matched", handleMatched);
+    socket.on("game:movieDetails", handleMovieDetails);
+    socket.on("game:rematchStatus", handleRematchStatus);
+    socket.on("game:partnerPassed", handlePartnerPassed);
+    socket.on("game:unavailable", handleUnavailable);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("session:replaced", handleReplaced);
+      socket.off("room:updated", handleUpdated);
+      socket.off("room:playerLeft", handlePlayerLeft);
+      socket.off("game:started", handleStarted);
+      socket.off("game:matched", handleMatched);
+      socket.off("game:movieDetails", handleMovieDetails);
+      socket.off("game:rematchStatus", handleRematchStatus);
+      socket.off("game:partnerPassed", handlePartnerPassed);
+      socket.off("game:unavailable", handleUnavailable);
+    };
+  }, [socket]);
+
+  const enterRoom = useCallback((next: CurrentRoom, token: string) => {
+    saveSession({ code: next.room.code, token });
+    setLastDeparture(null);
+    setExitReason(null);
+    dispatch({ type: "reset" });
+    setCurrent(next);
+  }, []);
+
+  const leaveRoom = useCallback(() => {
+    socket.emit("room:leave", () => {
+      // Leaving cannot fail, so local state is cleared optimistically below.
+    });
+    clearSession();
+    setCurrent(null);
+    setLastDeparture(null);
+    setExitReason(null);
+    dispatch({ type: "reset" });
+  }, [socket]);
+
+  const decide = useCallback(
+    (movieId: number, decision: Decision) => {
+      dispatch({ type: "decisionSent" });
+
+      socket.emit("game:decide", { movieId, decision }, (result) => {
+        if (!result.ok) {
+          dispatch({ type: "decisionRejected", error: result.error });
+          return;
         }
 
-        function handleDisconnect() {
-            setCurrent(null);
-            dispatch({ type: "reset" });
+        if (result.movie !== null) {
+          dispatch({
+            type: "advanced",
+            movie: result.movie,
+            partnerAlreadyPassed: result.partnerAlreadyPassed,
+          });
         }
+      });
+    },
+    [socket],
+  );
 
-        function handleStarted(payload: { movie: Movie }) {
-            dispatch({ type: "started", movie: payload.movie });
-        }
+  const clearNotice = useCallback(() => {
+    dispatch({ type: "noticeCleared" });
+  }, []);
 
-        function handleMatched(payload: { movie: Movie }) {
-            matchHaptic();
-            playMatchChime();
-            dispatch({ type: "matched", movie: payload.movie });
-        }
+  const requestRematch = useCallback(() => {
+    socket.emit("game:rematch", () => {
+      // Readiness arrives through game:rematchStatus. A rejection means the
+      // match can no longer be replayed (the partner left), which the screen shows.
+    });
+  }, [socket]);
 
-        function handleMovieDetails(payload: { movie: Movie }) {
-            dispatch({ type: "movieDetails", movie: payload.movie });
-        }
+  const returnToRoom = useCallback(() => {
+    dispatch({ type: "reset" });
+  }, []);
 
-        function handleRematchStatus(payload: { readyPlayerIds: string[] }) {
-            dispatch({ type: "rematchStatus", readyPlayerIds: payload.readyPlayerIds });
-        }
+  const value = useMemo(
+    () => ({
+      current,
+      lastDeparture,
+      exitReason,
+      isRestoring,
+      game,
+      enterRoom,
+      leaveRoom,
+      decide,
+      clearNotice,
+      requestRematch,
+      returnToRoom,
+    }),
+    [
+      current,
+      lastDeparture,
+      exitReason,
+      isRestoring,
+      game,
+      enterRoom,
+      leaveRoom,
+      decide,
+      clearNotice,
+      requestRematch,
+      returnToRoom,
+    ],
+  );
 
-        function handlePartnerPassed() {
-            dispatch({ type: "partnerPassed" });
-        }
-
-        function handleUnavailable() {
-            dispatch({ type: "unavailable" });
-        }
-
-        socket.on("room:updated", handleUpdated);
-        socket.on("room:playerLeft", handlePlayerLeft);
-        socket.on("disconnect", handleDisconnect);
-        socket.on("game:started", handleStarted);
-        socket.on("game:matched", handleMatched);
-        socket.on("game:movieDetails", handleMovieDetails);
-        socket.on("game:rematchStatus", handleRematchStatus);
-        socket.on("game:partnerPassed", handlePartnerPassed);
-        socket.on("game:unavailable", handleUnavailable);
-
-        return () => {
-            socket.off("room:updated", handleUpdated);
-            socket.off("room:playerLeft", handlePlayerLeft);
-            socket.off("disconnect", handleDisconnect);
-            socket.off("game:started", handleStarted);
-            socket.off("game:matched", handleMatched);
-            socket.off("game:movieDetails", handleMovieDetails);
-            socket.off("game:rematchStatus", handleRematchStatus);
-            socket.off("game:partnerPassed", handlePartnerPassed);
-            socket.off("game:unavailable", handleUnavailable);
-        };
-    }, [socket]);
-
-    const enterRoom = useCallback((next: CurrentRoom) => {
-        setLastDeparture(null);
-        dispatch({ type: "reset" });
-        setCurrent(next);
-    }, []);
-
-    const leaveRoom = useCallback(() => {
-        socket.emit("room:leave", () => {
-            // Leaving cannot fail, so local state is cleared optimistically below.
-        });
-        setCurrent(null);
-        setLastDeparture(null);
-        dispatch({ type: "reset" });
-    }, [socket]);
-
-    const decide = useCallback(
-        (movieId: number, decision: Decision) => {
-            dispatch({ type: "decisionSent" });
-
-            socket.emit("game:decide", { movieId, decision }, (result) => {
-                if (!result.ok) {
-                    dispatch({ type: "decisionRejected", error: result.error });
-                    return;
-                }
-
-                if (result.movie !== null) {
-                    dispatch({
-                        type: "advanced",
-                        movie: result.movie,
-                        partnerAlreadyPassed: result.partnerAlreadyPassed,
-                    });
-                }
-            });
-        },
-        [socket],
-    );
-
-    const clearNotice = useCallback(() => {
-        dispatch({ type: "noticeCleared" });
-    }, []);
-
-    const requestRematch = useCallback(() => {
-        socket.emit("game:rematch", () => {
-            // Readiness arrives through game:rematchStatus. A rejection means the
-            // match can no longer be replayed (the partner left), which the screen shows.
-        });
-    }, [socket]);
-
-    const returnToRoom = useCallback(() => {
-        dispatch({ type: "reset" });
-    }, []);
-
-    const value = useMemo(
-        () => ({
-            current,
-            lastDeparture,
-            game,
-            enterRoom,
-            leaveRoom,
-            decide,
-            clearNotice,
-            requestRematch,
-            returnToRoom,
-        }),
-        [
-            current,
-            lastDeparture,
-            game,
-            enterRoom,
-            leaveRoom,
-            decide,
-            clearNotice,
-            requestRematch,
-            returnToRoom,
-        ],
-    );
-
-    return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
+  return <RoomContext.Provider value={value}>{children}</RoomContext.Provider>;
 }
 
 export default RoomProvider;

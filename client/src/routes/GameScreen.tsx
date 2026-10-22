@@ -6,13 +6,14 @@ import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import type { GameNotice } from "../game/gameReducer";
 import { posterSrc, posterSrcSet } from "../lib/tmdbImage";
 import { imdbUrl, letterboxdUrl } from "../lib/movieLinks";
+import { decisionHaptic } from "../lib/haptics";
+import { primeAudio } from "../lib/sound";
+import { pageTitle } from "../lib/pageTitle";
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import ExternalLinkButton from "../components/ui/ExternalLinkButton";
 import MovieMeta from "../components/movie/MovieMeta";
-import { decisionHaptic } from "../lib/haptics";
-import { primeAudio } from "../lib/sound";
-import { pageTitle } from "../lib/pageTitle";
+import ReconnectingScreen from "../components/room/ReconnectingScreen";
 
 const noticeText: Record<GameNotice, string> = {
   partner_passed: "They passed on one of your picks.",
@@ -22,7 +23,7 @@ const noticeText: Record<GameNotice, string> = {
 
 function GameScreen() {
   const { code } = useParams();
-  const { current, game, decide, clearNotice } = useRoom();
+  const { current, game, decide, clearNotice, isRestoring } = useRoom();
   const leave = useLeaveRoom();
   const [confirmingLeave, setConfirmingLeave] = useState(false);
 
@@ -76,6 +77,10 @@ function GameScreen() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [keyboardMovieId, confirmingLeave, choose]);
 
+  if (current === null && isRestoring) {
+    return <ReconnectingScreen />;
+  }
+
   if (current === null || current.room.code !== code) {
     return (
       <Navigate to={code === undefined ? "/" : `/room/${code}/wait`} replace />
@@ -94,8 +99,7 @@ function GameScreen() {
 
   const { movie, pending } = game;
   const partnerName =
-    room.players.find((player) => player.id !== you.id)?.name ??
-    "Your friend";
+    room.players.find((player) => player.id !== you.id)?.name ?? "Your friend";
 
   return (
     <main className="mx-auto flex h-dvh w-full max-w-sm flex-col gap-3 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
@@ -155,7 +159,7 @@ function GameScreen() {
         <h1 className="font-heading text-2xl leading-tight uppercase">
           {movie.title}
           {movie.releaseYear !== null && (
-            <span className="font=body text-base normal-case opacity-70">
+            <span className="font-body text-base normal-case opacity-70">
               {" "}
               ({movie.releaseYear})
             </span>
@@ -204,7 +208,8 @@ function GameScreen() {
         onCancel={() => setConfirmingLeave(false)}
         onConfirm={leave}
       >
-        {partnerName} will be left swiping alone — and the popcorn&apos;s barely warm!
+        {partnerName} will be left swiping alone — and the popcorn&apos;s barely
+        warm!
       </ConfirmDialog>
     </main>
   );

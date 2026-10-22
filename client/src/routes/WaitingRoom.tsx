@@ -3,32 +3,43 @@ import { useRoom } from "../hooks/useRoom";
 import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import { useClipboard } from "../hooks/useClipboard";
 import { joinLink } from "../lib/joinLink";
+import { pageTitle } from "../lib/pageTitle";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import { pageTitle } from "../lib/pageTitle";
+import ReconnectingScreen from "../components/room/ReconnectingScreen";
 
 type CopyTarget = "code" | "link" | "share";
 
 function WaitingRoom() {
   const navigate = useNavigate();
   const { code } = useParams();
-  const { current, lastDeparture, game } = useRoom();
+  const { current, lastDeparture, game, exitReason, isRestoring } = useRoom();
   const leave = useLeaveRoom();
   const { result: copyResult, copy } = useClipboard<CopyTarget>();
 
+  if (current === null && isRestoring) {
+    return <ReconnectingScreen />;
+  }
+
   if (current === null || current.room.code !== code) {
+    let exitMessage: string;
+    if (exitReason === "replaced") {
+      exitMessage = "This game moved to another tab you opened.";
+    } else if (exitReason === "expired") {
+      exitMessage = "You were away too long, so your seat was released.";
+    } else {
+      exitMessage = "This room has closed, or you're not part of it.";
+    }
+
     return (
       <Screen>
         <title>{pageTitle("Room unavailable")}</title>
-
         <Card className="text-center">
           <h1 className="font-heading text-2xl uppercase">
             You&apos;re not in this room
           </h1>
-          <p className="mt-3 text-sm">
-            Rooms close when you leave, refresh or lose connection.
-          </p>
+          <p className="mt-3 text-sm">{exitMessage}</p>
           <Button className="mt-6 w-full" onClick={() => navigate("/")}>
             Back to home
           </Button>
@@ -106,7 +117,6 @@ function WaitingRoom() {
   return (
     <Screen>
       <title>{pageTitle(`Room ${room.code}`)}</title>
-
       <Card className="flex flex-col items-center gap-5 text-center">
         <h1 className="font-heading text-3xl uppercase">
           {isHost ? "Your Room" : "Joined!"}

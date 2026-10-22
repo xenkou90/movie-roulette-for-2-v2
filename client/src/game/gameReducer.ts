@@ -1,4 +1,4 @@
-import type { GameErrorCode, Movie } from "@movie-roulette/shared";
+import type { GameErrorCode, GameSnapshot, Movie } from "@movie-roulette/shared";
 
 export type GameNotice =
     | "partner_passed"
@@ -32,9 +32,31 @@ export type GameAction =
         | { type: "rematchStatus"; readyPlayerIds: string[] }
         | { type: "partnerLeft" }
         | { type: "unavailable" }
+        | { type: "restored"; snapshot: GameSnapshot }
         | { type: "reset" };
 
 export const initialGameState: GameState = { status: "idle" };
+
+function gameFromSnapshot(snapshot: GameSnapshot): GameState {
+    switch (snapshot.status) {
+        case "none":
+            return initialGameState;
+        case "playing":
+            return {
+                status: "playing",
+                movie: snapshot.movie,
+                pending: false,
+                notice: null,
+                noticeId: 0,
+            };
+        case "matched":
+            return {
+                status: "matched",
+                movie: snapshot.movie,
+                readyPlayerIds: snapshot.readyPlayerIds,
+            };
+    }
+}
 
 function showNotice(state: PlayingState, notice: GameNotice): PlayingState {
     return { ...state, notice, noticeId: state.noticeId + 1 };
@@ -105,7 +127,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         case "unavailable":
             return { status: "unavailable" };
 
-        case "reset":
+        case "restored":
+        return gameFromSnapshot(action.snapshot);
+
+            case "reset":
             return initialGameState;
 
         default: {
