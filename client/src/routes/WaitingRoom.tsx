@@ -77,7 +77,7 @@ function WaitingRoom() {
         });
         return;
       } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError"){
+        if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
       }
@@ -102,7 +102,10 @@ function WaitingRoom() {
 
   if (game.status === "unavailable") {
     status = "Couldn't load movies right now. Leave and try again.";
-    dotClass = "bg-danger";
+    dotClass= "bg-banger";
+  } else if (partner !== undefined && !partner.connected) {
+    status = `${partner.name} is reconnecting…`;
+    dotClass = "bg-brand-yellow motion-safe:animate-pulse";
   } else if (partner !== undefined) {
     status = `${partner.name} is here. Starting soon…`;
     dotClass = "bg-success";
@@ -140,7 +143,7 @@ function WaitingRoom() {
                   variant="secondary"
                   size="sm"
                   onClick={() => void copy(room.code, "code")}
-                >
+              >
                   {buttonLabel("code", "Copy code", "Copied!")}
                 </Button>
                 <Button
