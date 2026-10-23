@@ -1,5 +1,6 @@
 import { Navigate, useParams } from "react-router";
 import { useRoom } from "../hooks/useRoom";
+import { useSocket } from "../hooks/useSocket";
 import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import { posterSrc } from "../lib/tmdbImage";
 import { imdbUrl, letterboxdUrl } from "../lib/movieLinks";
@@ -21,6 +22,7 @@ function MatchScreen() {
     returnToRoom,
     isRestoring,
   } = useRoom();
+  const  { isConnected } = useSocket();
   const leave = useLeaveRoom();
 
   if (current === null && isRestoring) {
@@ -36,11 +38,11 @@ function MatchScreen() {
   const { room, you } = current;
 
   if (game.status === "playing") {
-    return <Navigate to={`/room/${room.code}/game`} replace />;
+    return <Navigate to={`/room/${room.code}/game`} replace />
   }
 
   if (game.status !== "matched") {
-    return <Navigate to={`/room/${room.code}/wait`} replace />;
+    return <Navigate to={`/room/${room.code}/wait`} replace />
   }
 
   const { movie, readyPlayerIds } = game;
@@ -52,6 +54,8 @@ function MatchScreen() {
   let rematchStatus = "";
   if (partner === undefined) {
     rematchStatus = `${lastDeparture ?? "Your friend"} left the room.`;
+  } else if (!partner.connected) {
+    rematchStatus = `${partner.name} is reconnecting…`;
   } else if (youReady && !partnerReady) {
     rematchStatus = `Waiting for ${partner.name}…`;
   } else if (partnerReady && !youReady) {
@@ -110,7 +114,7 @@ function MatchScreen() {
           <Button
             size="lg"
             className="w-full"
-            pending={youReady}
+            pending={youReady || !isConnected}
             onClick={requestRematch}
           >
             {youReady ? "You're ready" : "Play again"}
