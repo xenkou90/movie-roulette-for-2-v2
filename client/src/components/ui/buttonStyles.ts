@@ -1,4 +1,11 @@
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "accent";
+export type ButtonVariant =
+    | "primary"
+    | "secondary"
+    | "ghost"
+    | "accent"
+    | "imdb"
+    | "letterboxd";
+
 export type ButtonSize = "sm" | "md" | "lg";
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -6,6 +13,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     secondary: "bg-surface text-ink",
     ghost: "bg-transparent text-ink border-transparent shadow-none",
     accent: "bg-brand-blue text-ink",
+    imdb: "bg-imdb text-ink",
+    letterboxd: "bg-letterboxd text-ink",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
