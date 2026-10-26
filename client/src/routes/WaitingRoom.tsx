@@ -185,7 +185,7 @@ function WaitingRoom() {
           ))}
         </ul>
 
-        <Button variant="ghost" onClick={leave}>
+        <Button variant="accent" onClick={leave}>
           Leave room
         </Button>
       </Card>
