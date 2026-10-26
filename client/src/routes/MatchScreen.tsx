@@ -3,13 +3,12 @@ import { useRoom } from "../hooks/useRoom";
 import { useSocket } from "../hooks/useSocket";
 import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import { posterSrc } from "../lib/tmdbImage";
-import { imdbUrl, letterboxdUrl } from "../lib/movieLinks";
 import { pageTitle } from "../lib/pageTitle";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import ExternalLinkButton from "../components/ui/ExternalLinkButton";
 import MovieMeta from "../components/movie/MovieMeta";
+import MovieLinks from "../components/movie/MovieLinks";
 import ReconnectingScreen from "../components/room/ReconnectingScreen";
 
 function MatchScreen() {
@@ -93,14 +92,7 @@ function MatchScreen() {
           <MovieMeta movie={movie} muted className="mt-1" />
         </div>
 
-        <div className="grid w-full grid-cols-2 gap-3">
-          <ExternalLinkButton href={imdbUrl(movie)} size="sm">
-            IMDb
-          </ExternalLinkButton>
-          <ExternalLinkButton href={letterboxdUrl(movie)} size="sm">
-            Letterboxd
-          </ExternalLinkButton>
-        </div>
+        <MovieLinks movie={movie} />
 
         <p role="status" aria-live="polite" className="min-h-5 text-sm">
           {rematchStatus}
