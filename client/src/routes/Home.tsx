@@ -40,7 +40,12 @@ function Home() {
                 <Button variant="secondary" onClick={() => navigate("/join")}>
                     Enter a Room
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowHowToPlay(true)}>
+                <Button
+                    variant="accent"
+                    size="sm"
+                    className="self-center"
+                    onClick={() => setShowHowToPlay(true)}
+                >
                     How it works
                 </Button>
             </div>
