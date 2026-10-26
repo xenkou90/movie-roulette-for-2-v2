@@ -18,6 +18,8 @@
   /* State */
   --color-success: #22c55e;
   --color-danger: #e53535;
+  --color-imdb: #f5c518;
+  --color-letterboxd: #ff8000;
 
   /* Typography */
   --font-heading: "Archivo Black", system-ui, sans-serif;
