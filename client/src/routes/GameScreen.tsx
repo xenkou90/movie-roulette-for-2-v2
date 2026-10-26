@@ -183,7 +183,7 @@ function GameScreen() {
           <h1 className="font-heading text-2xl leading-tight uppercase">
             {movie.title}
             {movie.releaseYear !== null && (
-              <span className="font-body text-base normal-case opacity-70">
+              <span className="font-body text-base normal-case">
                 {" "}
                 ({movie.releaseYear})
               </span>

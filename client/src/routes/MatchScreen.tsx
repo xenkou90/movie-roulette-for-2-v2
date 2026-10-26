@@ -90,7 +90,7 @@ function MatchScreen() {
               </span>
             )}
           </h1>
-          <MovieMeta movie={movie} className="mt-1" />
+          <MovieMeta movie={movie} muted className="mt-1" />
         </div>
 
         <div className="grid w-full grid-cols-2 gap-3">

@@ -3,14 +3,17 @@ import { formatRuntime } from "../../lib/format";
 
 interface MovieMetaProps {
   movie: Movie;
+  muted?: boolean;
   className?: string;
 }
 
-function MovieMeta({ movie, className = "" }: MovieMetaProps) {
+function MovieMeta({ movie, muted = false, className = "" }: MovieMetaProps) {
   const genres = movie.genres.slice(0, 3).join(", ");
 
   return (
-    <p className={`text-xs uppercase tracking-widest opacity-70 ${className}`}>
+    <p
+      className={`text-xs uppercase tracking-widest ${muted ? "opacity-70" : ""} ${className}`}
+    >
       {movie.runtimeMinutes !== null && (
         <>
           <span aria-hidden="true">{formatRuntime(movie.runtimeMinutes)}</span>
