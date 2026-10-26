@@ -117,7 +117,7 @@ function GameScreen() {
 
         <header className="flex items-center justify-between gap-3">
           <Button
-            variant="ghost"
+            variant="accent"
             size="sm"
             onClick={() => setConfirmingLeave(true)}
           >

@@ -121,7 +121,7 @@ function MatchScreen() {
           </Button>
         )}
 
-        <Button variant="ghost" size="sm" onClick={leave}>
+        <Button variant="accent" size="sm" onClick={leave}>
           Leave
         </Button>
       </Card>
