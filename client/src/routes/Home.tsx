@@ -31,7 +31,7 @@ function Home() {
                 </h1>
 
                 <p className="mt-4 text-xs uppercase tracking-[0.25rem] opacity-60">
-                    Swipe · Match · Watch
+                    Tap · Match · Watch
                 </p>
             </Card>
 

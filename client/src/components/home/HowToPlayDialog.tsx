@@ -21,7 +21,7 @@ function HowToPlayDialog({ open, onClose }: HowToPlayDialogProps) {
                     with the code or your invite link.
                 </li>
                 <li>
-                    <strong className="font-heading uppercase">You both swipe.</strong>{" "}
+                    <strong className="font-heading uppercase">You both pick.</strong>{" "}
                     Tap Nope or I&apos;m in. Your picks stay secret — your friend never
                     sees which movies you liked.
                 </li>

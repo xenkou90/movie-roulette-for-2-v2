@@ -172,7 +172,7 @@ function GameScreen() {
             {awayPartner !== undefined && (
               <DelayedReveal delayMs={PARTNER_AWAY_DELAY_MS}>
                 <p className="rounded-lg border-2 border-ink bg-surface px-3 py-1 text-xs shadow-brutal-sm">
-                  {awayPartner.name} is reconnecting — keep swiping!
+                  {awayPartner.name} is reconnecting — keep going!
                 </p>
               </DelayedReveal>
             )}
@@ -227,12 +227,12 @@ function GameScreen() {
         <ConfirmDialog
           open={confirmingLeave}
           title="Leaving already?"
-          cancelLabel="Keep swiping"
+          cancelLabel="Keep picking"
           confirmLabel="Leave anyway"
           onCancel={() => setConfirmingLeave(false)}
           onConfirm={leave}
         >
-          {partnerName} will be left swiping alone — and the popcorn&apos;s barely
+          {partnerName} will be left picking alone — and the popcorn&apos;s barely
           warm!
         </ConfirmDialog>
       </main>
