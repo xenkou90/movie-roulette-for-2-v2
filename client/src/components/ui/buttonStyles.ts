@@ -2,7 +2,7 @@ export type ButtonVariant = "primary" | "secondary" | "ghost";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const variantStyles: Record<ButtonVariant, string> = {
-    primary: "bg-brand-pink text-surface",
+    primary: "bg-brand-pink text-ink",
     secondary: "bg-surface text-ink",
     ghost: "bg-transparent text-ink border-transparent shadow-none",
 };
