@@ -94,24 +94,30 @@ function MatchScreen() {
 
         <MovieLinks movie={movie} />
 
-        <p role="status" aria-live="polite" className="min-h-5 text-sm">
-          {rematchStatus}
-        </p>
-
-        {partner === undefined ? (
-          <Button size="lg" className="w-full" onClick={returnToRoom}>
-            Find a new partner
-          </Button>
-        ) : (
-          <Button
-            size="lg"
-            className="w-full"
-            pending={youReady || !isConnected}
-            onClick={requestRematch}
+        <div className="flex w-full flex-col">
+          <p
+            role="status"
+            aria-live="polite"
+            className={rematchStatus === "" ? "text-sm" : "mb-2 text-sm"}
           >
-            {youReady ? "You're ready" : "Play again"}
-          </Button>
-        )}
+            {rematchStatus}
+          </p>
+
+          {partner === undefined ? (
+            <Button size="lg" className="w-full" onClick={returnToRoom}>
+              Find a new partner
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="w-full"
+              pending={youReady || !isConnected}
+              onClick={requestRematch}
+            >
+              {youReady ? "You're ready" : "Play again"}
+            </Button>
+          )}
+        </div>
 
         <Button variant="accent" size="sm" onClick={leave}>
           Leave
