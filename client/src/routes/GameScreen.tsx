@@ -6,15 +6,14 @@ import { useSocket } from "../hooks/useSocket";
 import { useLeaveRoom } from "../hooks/useLeaveRoom";
 import type { GameNotice } from "../game/gameReducer";
 import { posterSrc, posterSrcSet } from "../lib/tmdbImage";
-import { imdbUrl, letterboxdUrl } from "../lib/movieLinks";
 import { decisionHaptic } from "../lib/haptics";
 import { primeAudio } from "../lib/sound";
 import { pageTitle } from "../lib/pageTitle";
 import Button from "../components/ui/Button";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import DelayedReveal from "../components/ui/DelayedReveal";
-import ExternalLinkButton from "../components/ui/ExternalLinkButton";
 import MovieMeta from "../components/movie/MovieMeta";
+import MovieLinks from "../components/movie/MovieLinks";
 import ReconnectingScreen from "../components/room/ReconnectingScreen";
 
 const PARTNER_AWAY_DELAY_MS = 1000;
@@ -195,14 +194,7 @@ function GameScreen() {
           </p>
         </section>
 
-        <div className="grid grid-cols-2 gap-3">
-          <ExternalLinkButton href={imdbUrl(movie)} variant="ghost" size="sm">
-            IMDb
-          </ExternalLinkButton>
-          <ExternalLinkButton href={letterboxdUrl(movie)} variant="ghost" size="sm">
-            Letterboxd
-          </ExternalLinkButton>
-        </div>
+        <MovieLinks movie={movie} />
 
         <div className="grid grid-cols-2 gap-3">
           <Button
