@@ -51,7 +51,7 @@ function Home() {
                 <span className="h-2 w-8 rounded-full border border-ink bg-brand-pink" />
             </div>
 
-            <p className="text-[0.625rem] uppercase tracking-[0.2rem] opacity-60">
+            <p className="text-[0.625rem] uppercase tracking-[0.2rem]">
                 Imagined, created, designed by Xeno
             </p>
 
