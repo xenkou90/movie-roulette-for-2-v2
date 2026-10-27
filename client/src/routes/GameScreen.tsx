@@ -170,7 +170,7 @@ function GameScreen() {
           )}
         </h1>
         <MovieMeta movie={movie} className="mt-1" />
-        <p className="mt-2 line-clamp-3 text-sm">
+        <p className="mt-2 line-clamp-4 text-sm [@media(min-height:800px)]:line-clamp-6">
           {movie.overview || "No synopsis available."}
         </p>
       </section>
