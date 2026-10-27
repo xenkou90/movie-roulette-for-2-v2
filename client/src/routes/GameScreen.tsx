@@ -114,7 +114,7 @@ function GameScreen() {
       <main className="mx-auto flex h-dvh w-full max-w-sm flex-col gap-3 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <title>{pageTitle("Picking a movie")}</title>
 
-        <header className="flex items-center justify-between gap-3">
+        <header className="flex items-center">
           <Button
             variant="accent"
             size="sm"
@@ -122,15 +122,6 @@ function GameScreen() {
           >
             Leave
           </Button>
-          <p
-            aria-hidden="true"
-            className="hidden text-xs opacity-60 [@media(hover:hover)_and_(pointer:fine)]:block"
-          >
-            ← Nope · → I&apos;m in
-          </p>
-          <p className="text-xs uppercase tracking-widest opacity-60">
-            Room {room.code}
-          </p>
         </header>
 
         <div className="relative flex min-h-0 flex-1 items-center justify-center">
@@ -202,6 +193,7 @@ function GameScreen() {
             size="lg"
             pending={actionsPaused}
             aria-keyshortcuts="ArrowLeft"
+            title="Keyboard shortcut: ←"
             onClick={() => choose(movie.id, "skip")}
           >
             Nope
@@ -210,6 +202,7 @@ function GameScreen() {
             size="lg"
             pending={actionsPaused}
             aria-keyshortcuts="ArrowRight"
+            title="Keyboard shortcut: →"
             onClick={() => choose(movie.id, "like")}
           >
             I&apos;m in
