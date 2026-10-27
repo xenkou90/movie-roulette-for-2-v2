@@ -69,6 +69,15 @@
   }
 }
 
+@utility bg-halftone {
+  background-image: radial-gradient(
+    circle,
+    rgb(0 0 0 / 0.88) 1.5px,
+    transparent 1.75px
+  );
+  background-size: 18px 18px;
+}
+
 @layer base {
   body {
     background-color: var(--color-canvas);
