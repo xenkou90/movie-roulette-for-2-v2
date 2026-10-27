@@ -2,10 +2,11 @@ import { useEffect, useState, type ReactNode } from "react";
 
 interface DelayedRevealProps {
     delayMs: number;
+    fallback?: ReactNode;
     children: ReactNode;
 }
 
-function DelayedReveal({ delayMs, children }: DelayedRevealProps) {
+function DelayedReveal({ delayMs, fallback = null, children }: DelayedRevealProps) {
     const [revealed, setRevealed] = useState(false);
 
     useEffect(() => {
@@ -13,7 +14,7 @@ function DelayedReveal({ delayMs, children }: DelayedRevealProps) {
         return () => clearTimeout(timeout);
     }, [delayMs]);
 
-    return revealed ? <>{children}</> : null;
+    return <>{revealed ? children : fallback}</>
 }
 
 export default DelayedReveal;
