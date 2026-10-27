@@ -10,6 +10,7 @@ import Button from "../components/ui/Button";
 import MovieMeta from "../components/movie/MovieMeta";
 import MovieLinks from "../components/movie/MovieLinks";
 import ReconnectingScreen from "../components/room/ReconnectingScreen";
+import CelebrationBackdrop from "../components/match/CelebrationBackdrop";
 
 function MatchScreen() {
   const { code } = useParams();
@@ -21,7 +22,7 @@ function MatchScreen() {
     returnToRoom,
     isRestoring,
   } = useRoom();
-  const  { isConnected } = useSocket();
+  const { isConnected } = useSocket();
   const leave = useLeaveRoom();
 
   if (current === null && isRestoring) {
@@ -37,11 +38,11 @@ function MatchScreen() {
   const { room, you } = current;
 
   if (game.status === "playing") {
-    return <Navigate to={`/room/${room.code}/game`} replace />
+    return <Navigate to={`/room/${room.code}/game`} replace />;
   }
 
   if (game.status !== "matched") {
-    return <Navigate to={`/room/${room.code}/wait`} replace />
+    return <Navigate to={`/room/${room.code}/wait`} replace />;
   }
 
   const { movie, readyPlayerIds } = game;
@@ -62,68 +63,72 @@ function MatchScreen() {
   }
 
   return (
-    <Screen>
-      <title>{pageTitle("It's a match!")}</title>
-      <Card className="flex flex-col items-center gap-3 text-center">
-        <p className="-rotate-3 rounded-lg border-3 border-ink bg-brand-yellow px-4 py-1 font-heading text-xl uppercase shadow-brutal motion-safe:animate-pop">
-          It&apos;s a match!
-        </p>
+    <div className="relative isolate min-h-dvh overflow-hidden bg-brand-pink bg-halftone">
+      <CelebrationBackdrop />
 
-        {movie.posterPath !== null && (
-          <img
-            src={posterSrc(movie.posterPath, 342)}
-            width={342}
-            height={513}
-            alt={`Poster for ${movie.title}`}
-            className="mt-2 aspect-[2/3] w-36 rounded-xl border-3 border-ink bg-ink/10 object-cover shadow-brutal motion-safe:animate-rise motion-safe:[animation-delay:150ms]"
-          />
-        )}
-
-        <div className="motion-safe:animate-rise motion-safe:[animation-delay:300ms]">
-          <h1 className="font-heading text-2xl leading-tight uppercase">
-            {movie.title}
-            {movie.releaseYear !== null && (
-              <span className="font-body text-base normal-case opacity-70">
-                {" "}
-                ({movie.releaseYear})
-              </span>
-            )}
-          </h1>
-          <MovieMeta movie={movie} muted className="mt-1" />
-        </div>
-
-        <MovieLinks movie={movie} />
-
-        <div className="flex w-full flex-col">
-          <p
-            role="status"
-            aria-live="polite"
-            className={rematchStatus === "" ? "text-sm" : "mb-2 text-sm"}
-          >
-            {rematchStatus}
+      <Screen>
+        <title>{pageTitle("It's a match!")}</title>
+        <Card className="flex flex-col items-center gap-3 text-center">
+          <p className="-rotate-3 rounded-lg border-3 border-ink bg-brand-yellow px-4 py-1 font-heading text-xl uppercase shadow-brutal motion-safe:animate-pop">
+            It&apos;s a match!
           </p>
 
-          {partner === undefined ? (
-            <Button size="lg" className="w-full" onClick={returnToRoom}>
-              Find a new partner
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              className="w-full"
-              pending={youReady || !isConnected}
-              onClick={requestRematch}
-            >
-              {youReady ? "You're ready" : "Play again"}
-            </Button>
+          {movie.posterPath !== null && (
+            <img
+              src={posterSrc(movie.posterPath, 342)}
+              width={342}
+              height={513}
+              alt={`Poster for ${movie.title}`}
+              className="mt-2 aspect-[2/3] w-36 rounded-xl border-3 border-ink bg-ink/10 object-cover shadow-brutal motion-safe:animate-rise motion-safe:[animation-delay:150ms]"
+            />
           )}
-        </div>
 
-        <Button variant="accent" size="sm" onClick={leave}>
-          Leave
-        </Button>
-      </Card>
-    </Screen>
+          <div className="motion-safe:animate-rise motion-safe:[animation-delay:300ms]">
+            <h1 className="font-heading text-2xl leading-tight uppercase">
+              {movie.title}
+              {movie.releaseYear !== null && (
+                <span className="font-body text-base normal-case opacity-70">
+                  {" "}
+                  ({movie.releaseYear})
+                </span>
+              )}
+            </h1>
+            <MovieMeta movie={movie} muted className="mt-1" />
+          </div>
+
+          <MovieLinks movie={movie} />
+
+          <div className="flex w-full flex-col">
+            <p
+              role="status"
+              aria-live="polite"
+              className={rematchStatus === "" ? "text-sm" : "mb-2 text-sm"}
+            >
+              {rematchStatus}
+            </p>
+
+            {partner === undefined ? (
+              <Button size="lg" className="w-full" onClick={returnToRoom}>
+                Find a new partner
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                className="w-full"
+                pending={youReady || !isConnected}
+                onClick={requestRematch}
+              >
+                {youReady ? "You're ready" : "Play again"}
+              </Button>
+            )}
+          </div>
+
+          <Button variant="accent" size="sm" onClick={leave}>
+            Leave
+          </Button>
+        </Card>
+      </Screen>
+    </div>
   );
 }
 
