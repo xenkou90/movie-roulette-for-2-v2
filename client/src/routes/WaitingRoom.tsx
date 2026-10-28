@@ -102,7 +102,7 @@ function WaitingRoom() {
 
   if (game.status === "unavailable") {
     status = "Couldn't load movies right now. Leave and try again.";
-    dotClass= "bg-banger";
+    dotClass = "bg-banger";
   } else if (partner !== undefined && !partner.connected) {
     status = `${partner.name} is reconnecting…`;
     dotClass = "bg-brand-yellow motion-safe:animate-pulse";
@@ -143,7 +143,7 @@ function WaitingRoom() {
                   variant="secondary"
                   size="sm"
                   onClick={() => void copy(room.code, "code")}
-              >
+                >
                   {buttonLabel("code", "Copy code", "Copied!")}
                 </Button>
                 <Button
@@ -166,7 +166,11 @@ function WaitingRoom() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3" role="status" aria-live="polite">
+        <div
+          className="flex items-center gap-3"
+          role="status"
+          aria-live="polite"
+        >
           <span
             aria-hidden="true"
             className={`h-3 w-3 shrink-0 rounded-full border-2 border-ink ${dotClass}`}

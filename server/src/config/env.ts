@@ -18,7 +18,9 @@ function optionalPositiveInt(name: string, fallback: number): number {
 
   const value = Number(raw);
   if (!Number.isInteger(value) || value <= 0) {
-    console.error(`Environment variable ${name} must be a positive whole number`);
+    console.error(
+      `Environment variable ${name} must be a positive whole number`,
+    );
     process.exit(1);
   }
   return value;

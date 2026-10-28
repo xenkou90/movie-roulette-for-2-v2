@@ -98,7 +98,7 @@ function GameScreen() {
   }
 
   if (game.status !== "playing") {
-    return <Navigate  to={`/room/${room.code}/wait`} replace />;
+    return <Navigate to={`/room/${room.code}/wait`} replace />;
   }
 
   const { movie, pending } = game;
@@ -159,7 +159,10 @@ function GameScreen() {
         </div>
       </div>
 
-      <section key={movie.id} className="text-center motion-safe:animate-card-in">
+      <section
+        key={movie.id}
+        className="text-center motion-safe:animate-card-in"
+      >
         <h1 className="font-heading text-2xl leading-tight uppercase">
           {movie.title}
           {movie.releaseYear !== null && (

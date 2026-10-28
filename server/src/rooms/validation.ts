@@ -1,4 +1,7 @@
-import { PLAYER_NAME_MAX_LENGTH, ROOM_CODE_REGEX } from "@movie-roulette/shared";
+import {
+  PLAYER_NAME_MAX_LENGTH,
+  ROOM_CODE_REGEX,
+} from "@movie-roulette/shared";
 
 export function normalisePlayerName(value: unknown): string | null {
   if (typeof value !== "string") return null;
