@@ -6,10 +6,12 @@ import WaitingRoom from "./routes/WaitingRoom";
 import GameScreen from "./routes/GameScreen";
 import MatchScreen from "./routes/MatchScreen";
 import NotFound from "./routes/NotFound";
+import RouteFocus from "./components/routing/RouteFocus";
 
 function App() {
   return (
     <BrowserRouter>
+      <RouteFocus />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/create" element={<CreateRoom />} />

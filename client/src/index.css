@@ -84,4 +84,7 @@
     color: var(--color-ink);
     font-family: var(--font-body);
   }
+  [tabindex="-1"]:focus {
+    outline: none;
+  }
 }
