@@ -1,4 +1,4 @@
-const STORAGE_KEY = "movie-roulette:session";
+export const STORAGE_KEY = "movie-roulette:session";
 
 export interface StoredSession {
   code: string;
