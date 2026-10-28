@@ -4,8 +4,8 @@ import type { MovieQueue } from "./queue.js";
 export type GameStatus = "loading" | "playing";
 
 export interface GameSession {
-    status:GameStatus;
-    state: GameState;
-    queue: MovieQueue;
-    rematchReady: Set<string>;
+  status: GameStatus;
+  state: GameState;
+  queue: MovieQueue;
+  rematchReady: Set<string>;
 }

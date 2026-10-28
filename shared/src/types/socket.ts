@@ -93,6 +93,6 @@ export interface ClientToServerEvents {
 }
 
 export interface SocketData {
-  roomCode?: string,
+  roomCode?: string;
   playerId?: string;
 }

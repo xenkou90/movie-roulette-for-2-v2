@@ -98,7 +98,10 @@ function RoomProvider({ children }: RoomProviderProps) {
     }
 
     function handleRematchStatus(payload: { readyPlayerIds: string[] }) {
-      dispatch({ type: "rematchStatus", readyPlayerIds: payload.readyPlayerIds });
+      dispatch({
+        type: "rematchStatus",
+        readyPlayerIds: payload.readyPlayerIds,
+      });
     }
 
     function handlePartnerPassed() {

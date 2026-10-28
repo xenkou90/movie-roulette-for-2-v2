@@ -17,7 +17,9 @@ function MovieMeta({ movie, muted = false, className = "" }: MovieMetaProps) {
       {movie.runtimeMinutes !== null && (
         <>
           <span aria-hidden="true">{formatRuntime(movie.runtimeMinutes)}</span>
-          <span className="sr-only">Runtime {movie.runtimeMinutes} minutes</span>
+          <span className="sr-only">
+            Runtime {movie.runtimeMinutes} minutes
+          </span>
           {" · "}
         </>
       )}

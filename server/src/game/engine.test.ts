@@ -5,138 +5,138 @@ const ALICE = "alice";
 const BOB = "bob";
 
 function newGame() {
-    return createGameState([ALICE, BOB]);
+  return createGameState([ALICE, BOB]);
 }
 
 describe("createGameState", () => {
-    it("starts every player at index zero", () => {
-        const state = newGame();
+  it("starts every player at index zero", () => {
+    const state = newGame();
 
-        expect(getIndex(state, ALICE)).toBe(0);
-        expect(getIndex(state, BOB)).toBe(0);
-        expect(state.matchedMovieId).toBeNull();
-    });
+    expect(getIndex(state, ALICE)).toBe(0);
+    expect(getIndex(state, BOB)).toBe(0);
+    expect(state.matchedMovieId).toBeNull();
+  });
 });
 
 describe("applyDecision", () => {
-    it("advances the player on a skip", () => {
-        const state = newGame();
+  it("advances the player on a skip", () => {
+    const state = newGame();
 
-        const outcome = applyDecision(state, ALICE, 1, "skip");
+    const outcome = applyDecision(state, ALICE, 1, "skip");
 
-        expect(outcome).toEqual({ type: "advance" });
-        expect(getIndex(state, ALICE)).toBe(1);
-        expect(getIndex(state, BOB)).toBe(0);
-    });
+    expect(outcome).toEqual({ type: "advance" });
+    expect(getIndex(state, ALICE)).toBe(1);
+    expect(getIndex(state, BOB)).toBe(0);
+  });
 
-    it("advances the player on an unmatched like", () => {
-        const state = newGame();
+  it("advances the player on an unmatched like", () => {
+    const state = newGame();
 
-        const outcome = applyDecision(state, ALICE, 1, "like");
+    const outcome = applyDecision(state, ALICE, 1, "like");
 
-        expect(outcome).toEqual({ type: "advance" });
-        expect(getIndex(state, ALICE)).toBe(1);
-    });
+    expect(outcome).toEqual({ type: "advance" });
+    expect(getIndex(state, ALICE)).toBe(1);
+  });
 
-    it("matches when both players like the same movie", () => {
-        const state = newGame();
+  it("matches when both players like the same movie", () => {
+    const state = newGame();
 
-        applyDecision(state, ALICE, 7, "like");
-        const outcome = applyDecision(state, BOB, 7, "like");
+    applyDecision(state, ALICE, 7, "like");
+    const outcome = applyDecision(state, BOB, 7, "like");
 
-        expect(outcome).toEqual({ type: "match", movieId: 7 });
-        expect(state.matchedMovieId).toBe(7);
-    });
+    expect(outcome).toEqual({ type: "match", movieId: 7 });
+    expect(state.matchedMovieId).toBe(7);
+  });
 
-    it("does not match when players like different movies", () => {
-        const state = newGame();
+  it("does not match when players like different movies", () => {
+    const state = newGame();
 
-        applyDecision(state, ALICE, 1, "like");
-        const outcome = applyDecision(state, BOB, 2, "like");
+    applyDecision(state, ALICE, 1, "like");
+    const outcome = applyDecision(state, BOB, 2, "like");
 
-        expect(outcome).toEqual({ type: "advance" });
-        expect(state.matchedMovieId).toBeNull();
-    });
+    expect(outcome).toEqual({ type: "advance" });
+    expect(state.matchedMovieId).toBeNull();
+  });
 
-    it("reports when a player skips a movie the partner liked", () => {
-        const state = newGame();
+  it("reports when a player skips a movie the partner liked", () => {
+    const state = newGame();
 
-        applyDecision(state, ALICE, 3, "like");
-        const outcome = applyDecision(state, BOB, 3, "skip");
+    applyDecision(state, ALICE, 3, "like");
+    const outcome = applyDecision(state, BOB, 3, "skip");
 
-        expect(outcome).toEqual({ type: "partner_passed" });
-    });
+    expect(outcome).toEqual({ type: "partner_passed" });
+  });
 
-    it("does not report a pass when nobody liked the movie", () => {
-        const state = newGame();
+  it("does not report a pass when nobody liked the movie", () => {
+    const state = newGame();
 
-        const outcome = applyDecision(state, BOB, 3, "skip");
+    const outcome = applyDecision(state, BOB, 3, "skip");
 
-        expect(outcome).toEqual({ type: "advance" });
-    });
+    expect(outcome).toEqual({ type: "advance" });
+  });
 
-    it("matches regardless of which player likes the movie first", () => {
-        const state = newGame();
+  it("matches regardless of which player likes the movie first", () => {
+    const state = newGame();
 
-        applyDecision(state, BOB, 9, "like");
-        const outcome = applyDecision(state, ALICE, 9, "like");
+    applyDecision(state, BOB, 9, "like");
+    const outcome = applyDecision(state, ALICE, 9, "like");
 
-        expect(outcome).toEqual({ type: "match", movieId: 9 });
-    });
+    expect(outcome).toEqual({ type: "match", movieId: 9 });
+  });
 
-    it("allows likes to accumulate out of order", () => {
-        const state = newGame();
+  it("allows likes to accumulate out of order", () => {
+    const state = newGame();
 
-        applyDecision(state, ALICE, 1, "like");
-        applyDecision(state, ALICE, 2, "like");
-        applyDecision(state, ALICE, 3, "like");
+    applyDecision(state, ALICE, 1, "like");
+    applyDecision(state, ALICE, 2, "like");
+    applyDecision(state, ALICE, 3, "like");
 
-        applyDecision(state, BOB, 1, "skip");
-        const outcome = applyDecision(state, BOB, 2, "like");
+    applyDecision(state, BOB, 1, "skip");
+    const outcome = applyDecision(state, BOB, 2, "like");
 
-        expect(outcome).toEqual({ type: "match", movieId: 2 });
-        expect(getIndex(state, ALICE)).toBe(3);
-        expect(getIndex(state, BOB)).toBe(2);
-    });
+    expect(outcome).toEqual({ type: "match", movieId: 2 });
+    expect(getIndex(state, ALICE)).toBe(3);
+    expect(getIndex(state, BOB)).toBe(2);
+  });
 
-    it("ignores decisions once a match exists", () => {
-        const state = newGame();
+  it("ignores decisions once a match exists", () => {
+    const state = newGame();
 
-        applyDecision(state, ALICE, 5, "like");
-        applyDecision(state, BOB, 5, "like");
+    applyDecision(state, ALICE, 5, "like");
+    applyDecision(state, BOB, 5, "like");
 
-        const outcome = applyDecision(state, ALICE, 6, "like");
+    const outcome = applyDecision(state, ALICE, 6, "like");
 
-        expect(outcome).toEqual({ type: "already_matched" });
-        expect(state.matchedMovieId).toBe(5);
-        expect(getIndex(state, ALICE)).toBe(1);
-    });
+    expect(outcome).toEqual({ type: "already_matched" });
+    expect(state.matchedMovieId).toBe(5);
+    expect(getIndex(state, ALICE)).toBe(1);
+  });
 
-    it("rejects decisions from unknown players", () => {
-        const state = newGame();
+  it("rejects decisions from unknown players", () => {
+    const state = newGame();
 
-        const outcome = applyDecision(state, "stranger", 1, "like");
+    const outcome = applyDecision(state, "stranger", 1, "like");
 
-        expect(outcome).toEqual({ type: "out_of_turn" });
-    });
+    expect(outcome).toEqual({ type: "out_of_turn" });
+  });
 
-    it("tells a player when they like a movie the partner already skipped", () => {
-        const state = newGame();
+  it("tells a player when they like a movie the partner already skipped", () => {
+    const state = newGame();
 
-        applyDecision(state, ALICE, 4, "skip");
-        const outcome = applyDecision(state, BOB, 4, "like");
+    applyDecision(state, ALICE, 4, "skip");
+    const outcome = applyDecision(state, BOB, 4, "like");
 
-        expect(outcome).toEqual({ type: "partner_already_passed" });
-        expect(state.matchedMovieId).toBeNull();
-        expect(getIndex(state, BOB)).toBe(1);
-    });
+    expect(outcome).toEqual({ type: "partner_already_passed" });
+    expect(state.matchedMovieId).toBeNull();
+    expect(getIndex(state, BOB)).toBe(1);
+  });
 
-    it("reports nothing when both players skip the same movie", () => {
-        const state = newGame();
+  it("reports nothing when both players skip the same movie", () => {
+    const state = newGame();
 
-        applyDecision(state, ALICE, 8, "skip");
-        const outcome = applyDecision(state, BOB, 8, "skip");
+    applyDecision(state, ALICE, 8, "skip");
+    const outcome = applyDecision(state, BOB, 8, "skip");
 
-        expect(outcome).toEqual({ type: "advance" });
-    });
+    expect(outcome).toEqual({ type: "advance" });
+  });
 });
