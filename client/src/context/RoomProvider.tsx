@@ -6,7 +6,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Decision, Movie, RoomView } from "@movie-roulette/shared";
+import type {
+  Decision,
+  Movie,
+  RoomView,
+  SessionEndReason,
+} from "@movie-roulette/shared";
 import { useSocket } from "../hooks/useSocket";
 import { gameReducer, initialGameState } from "../game/gameReducer";
 import { matchHaptic } from "../lib/haptics";
@@ -24,6 +29,9 @@ function RoomProvider({ children }: RoomProviderProps) {
   const [lastDeparture, setLastDeparture] = useState<string | null>(null);
   const [exitReason, setExitReason] = useState<ExitReason | null>(null);
   const [isRestoring, setIsRestoring] = useState(() => loadSession() !== null);
+  const [idleWarningSeconds, setIdleWarningSeconds] = useState<number | null>(
+    null,
+  );
   const [game, dispatch] = useReducer(gameReducer, initialGameState);
 
   useEffect(() => {
@@ -39,6 +47,7 @@ function RoomProvider({ children }: RoomProviderProps) {
 
       socket.emit("session:resume", stored, (result) => {
         setIsRestoring(false);
+        setIdleWarningSeconds(null);
 
         if (!result.ok) {
           clearSession();
@@ -67,6 +76,19 @@ function RoomProvider({ children }: RoomProviderProps) {
       clearSession();
       setCurrent(null);
       setExitReason("replaced");
+      setIdleWarningSeconds(null);
+      dispatch({ type: "reset" });
+    }
+
+    function handleIdleWarning(payload: { secondsLeft: number }) {
+      setIdleWarningSeconds(payload.secondsLeft);
+    }
+
+    function handleSessionEnded(payload: { reason: SessionEndReason }) {
+      clearSession();
+      setCurrent(null);
+      setExitReason(payload.reason);
+      setIdleWarningSeconds(null);
       dispatch({ type: "reset" });
     }
 
@@ -115,6 +137,8 @@ function RoomProvider({ children }: RoomProviderProps) {
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("session:replaced", handleReplaced);
+    socket.on("session:idleWarning", handleIdleWarning);
+    socket.on("session:ended", handleSessionEnded);
     socket.on("room:updated", handleUpdated);
     socket.on("room:playerLeft", handlePlayerLeft);
     socket.on("game:started", handleStarted);
@@ -128,6 +152,8 @@ function RoomProvider({ children }: RoomProviderProps) {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
       socket.off("session:replaced", handleReplaced);
+      socket.off("session:idleWarning", handleIdleWarning);
+      socket.off("session:ended", handleSessionEnded);
       socket.off("room:updated", handleUpdated);
       socket.off("room:playerLeft", handlePlayerLeft);
       socket.off("game:started", handleStarted);
@@ -143,6 +169,7 @@ function RoomProvider({ children }: RoomProviderProps) {
     saveSession({ code: next.room.code, token });
     setLastDeparture(null);
     setExitReason(null);
+    setIdleWarningSeconds(null);
     dispatch({ type: "reset" });
     setCurrent(next);
   }, []);
@@ -155,6 +182,7 @@ function RoomProvider({ children }: RoomProviderProps) {
     setCurrent(null);
     setLastDeparture(null);
     setExitReason(null);
+    setIdleWarningSeconds(null);
     dispatch({ type: "reset" });
   }, [socket]);
 
@@ -195,12 +223,18 @@ function RoomProvider({ children }: RoomProviderProps) {
     dispatch({ type: "reset" });
   }, []);
 
+  const stillHere = useCallback(() => {
+    socket.emit("session:stillHere");
+    setIdleWarningSeconds(null);
+  }, [socket]);
+
   const value = useMemo(
     () => ({
       current,
       lastDeparture,
       exitReason,
       isRestoring,
+      idleWarningSeconds,
       game,
       enterRoom,
       leaveRoom,
@@ -208,12 +242,14 @@ function RoomProvider({ children }: RoomProviderProps) {
       clearNotice,
       requestRematch,
       returnToRoom,
+      stillHere,
     }),
     [
       current,
       lastDeparture,
       exitReason,
       isRestoring,
+      idleWarningSeconds,
       game,
       enterRoom,
       leaveRoom,
@@ -221,6 +257,7 @@ function RoomProvider({ children }: RoomProviderProps) {
       clearNotice,
       requestRematch,
       returnToRoom,
+      stillHere,
     ],
   );
 
