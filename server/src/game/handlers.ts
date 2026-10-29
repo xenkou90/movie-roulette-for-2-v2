@@ -12,6 +12,7 @@ import { applyDecision, createGameState, getIndex } from "./engine.js";
 import { createQueue, ensureAvailable } from "./queue.js";
 import type { GameSession } from "./session.js";
 import { isDecision } from "./validation.js";
+import { markActive } from "../rooms/seats.js";
 
 function isStillCurrent(room: Room, session: GameSession): boolean {
   return getRoom(room.code) === room && room.game === session;
@@ -120,6 +121,8 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
     }
 
     const { room, player } = seat;
+
+    markActive(io, room, player);
 
     if (session.state.matchedMovieId !== null) {
       ack({ ok: false, error: "game_over" });
@@ -241,6 +244,8 @@ export function registerGameHandlers(io: AppServer, socket: AppSocket): void {
     }
 
     const { room, player } = seat;
+
+    markActive(io, room, player);
 
     session.rematchReady.add(player.id);
     ack({ ok: true });

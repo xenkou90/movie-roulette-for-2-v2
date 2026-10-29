@@ -57,11 +57,15 @@ export interface PingResult {
   serverTime: number;
 }
 
+export type SessionEndReason = "idle";
+
 export interface ServerToClientEvents {
   "server:hello": (payload: ServerHelloPayload) => void;
   "room:updated": (room: RoomView) => void;
   "room:playerLeft": (payload: { playerId: string; name: string }) => void;
   "session:replaced": () => void;
+  "session:idleWarning": (payload: { secondsLeft: number }) => void;
+  "session:ended": (payload: { reason: SessionEndReason }) => void;
   "game:started": (payload: { movie: Movie }) => void;
   "game:matched": (payload: { movie: Movie }) => void;
   "game:movieDetails": (payload: { movie: Movie }) => void;
@@ -85,6 +89,7 @@ export interface ClientToServerEvents {
     payload: { code: string; token: string },
     ack: (result: ResumeResult) => void,
   ) => void;
+  "session:stillHere": () => void;
   "game:decide": (
     payload: { movieId: number; decision: Decision },
     ack: (result: DecideResult) => void,
