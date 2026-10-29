@@ -78,6 +78,8 @@
   background-size: 18px 18px;
 }
 
+@custom-variant short (@media (max-height: 639px));
+
 @layer base {
   body {
     background-color: var(--color-canvas);

@@ -107,7 +107,7 @@ function GameScreen() {
   const actionsPaused = pending || !isConnected;
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-sm flex-col gap-3 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
+    <main className="mx-auto flex h-dvh w-full max-w-sm flex-col gap-3 px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] short:h-auto short:min-h-dvh">
       <title>{pageTitle("Picking a movie")}</title>
 
       <header className="flex items-center justify-between gap-3">
@@ -128,7 +128,7 @@ function GameScreen() {
         </p>
       </header>
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center short:h-80 short:flex-none">
         {movie.posterPath !== null ? (
           <img
             key={movie.id}
