@@ -31,4 +31,7 @@ export const env = {
   port: optionalPositiveInt("PORT", 3001),
   clientUrl: optional("CLIENT_URL", "http://loclahost:5173"),
   resumeGraceMs: optionalPositiveInt("RESUME_GRACE_MS", 90_000),
+  idleTimeoutMs: optionalPositiveInt("IDLE_TIMEOUT_MS", 12 * 60_000),
+  waitingTimeoutMs: optionalPositiveInt("WAITING_TIMEOUT_MS", 30 * 60_000),
+  idleWarningMs: optionalPositiveInt("IDLE_WARNING_MS", 2 * 60_000),
 } as const;

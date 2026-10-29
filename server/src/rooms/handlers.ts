@@ -4,6 +4,7 @@ import type { AppServer, AppSocket } from "../socket/types.js";
 import {
   forgetRoom,
   holdSeat,
+  markActive,
   ownedSeat,
   releaseSeat,
   toRoomView,
@@ -43,6 +44,8 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     socket.data.playerId = player.id;
 
     console.log(`[room] ${playerName} created ${code}`);
+
+    markActive(io, room, player);
 
     ack({
       ok: true,
@@ -84,6 +87,10 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     socket.data.playerId = player.id;
 
     console.log(`[room] ${playerName} joined ${roomCode}`);
+
+    for (const member of room.players) {
+      markActive(io, room, member);
+    }
 
     const view = toRoomView(room);
 
@@ -139,6 +146,8 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     socket.data.roomCode = room.code;
     socket.data.playerId = player.id;
 
+    markActive(io, room, player);
+
     ack({
       ok: true,
       room: toRoomView(room),
@@ -148,6 +157,13 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
 
     socket.to(room.code).emit("room:updated", toRoomView(room));
     console.log(`[room] player ${player.id} resumed in ${room.code}`);
+  });
+
+  socket.on("session:stillHere", () => {
+    const seat = ownedSeat(socket);
+    if (seat !== undefined) {
+      markActive(io, seat.room, seat.player);
+    }
   });
 
   socket.on("room:leave", (ack) => {

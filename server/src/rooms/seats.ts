@@ -1,7 +1,9 @@
 import type { RoomView } from "@movie-roulette/shared";
 import { env } from "../config/env.js";
 import type { AppServer, AppSocket } from "../socket/types.js";
+import { clearIdleTimers, startIdleTimers } from "./idle.js";
 import {
+  MAX_PLAYERS,
   findPlayer,
   getRoom,
   removePlayer,
@@ -51,6 +53,7 @@ export function forgetRoom(socket: AppSocket): void {
 
 export function releaseSeat(io: AppServer, room: Room, player: Player): void {
   clearTimeout(player.graceTimer);
+  clearIdleTimers(player);
 
   const remaining = removePlayer(room.code, player.id);
 
@@ -61,6 +64,10 @@ export function releaseSeat(io: AppServer, room: Room, player: Player): void {
       name: player.name,
     });
     io.to(room.code).emit("room:updated", toRoomView(remaining));
+
+    for (const other of remaining.players) {
+      markActive(io, remaining, other);
+    }
   }
 
   console.log(`[room] player ${player.id} left ${room.code}`);
@@ -79,4 +86,38 @@ export function holdSeat(io: AppServer, room: Room, player: Player): void {
   console.log(
     `[room] player ${player.id} disconnected from ${room.code}; holding seat`,
   );
+}
+
+export function markActive(io: AppServer, room: Room, player: Player): void {
+  const timeoutMs =
+    room.players.length < MAX_PLAYERS
+      ? env.waitingTimeoutMs
+      : env.idleTimeoutMs;
+
+  startIdleTimers(player, timeoutMs, {
+    onWarning: () => {
+      if (isSeated(room, player) && player.socketId !== null) {
+        io.to(player.socketId).emit("session:idleWarning", {
+          secondsLeft: Math.round(env.idleWarningMs / 1000),
+        });
+      }
+    },
+    onTimeout: () => {
+      if (!isSeated(room, player)) return;
+
+      const socketId = player.socketId;
+      releaseSeat(io, room, player);
+
+      if (socketId !== null) {
+        io.to(socketId).emit("session:ended", { reason: "idle" });
+
+        const socket = io.sockets.sockets.get(socketId);
+        if (socket !== undefined) {
+          forgetRoom(socket);
+        }
+      }
+
+      console.log(`[room] player ${player.id} timed out in ${room.code}`);
+    },
+  });
 }

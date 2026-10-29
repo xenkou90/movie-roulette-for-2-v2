@@ -13,6 +13,8 @@ export interface Player {
   name: string;
   socketId: string | null;
   graceTimer?: NodeJS.Timeout;
+  idleWarningTimer?: NodeJS.Timeout;
+  idleTimer?: NodeJS.Timeout;
 }
 
 export interface Room {
