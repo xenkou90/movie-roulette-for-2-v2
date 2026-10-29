@@ -23,8 +23,14 @@ function WaitingRoom() {
   }
 
   if (current === null || current.room.code !== code) {
+    let exitTitle = "You're not in this room";
     let exitMessage: string;
-    if (exitReason === "replaced") {
+
+    if (exitReason === "idle") {
+      exitTitle = "Movie night paused";
+      exitMessage =
+        "Looks like the popcorn won. Start a new room when you're both ready.";
+    } else if (exitReason === "replaced") {
       exitMessage = "This game moved to another tab you opened.";
     } else if (exitReason === "expired") {
       exitMessage = "You were away too long, so your seat was released.";
@@ -34,11 +40,9 @@ function WaitingRoom() {
 
     return (
       <Screen>
-        <title>{pageTitle("Room unavailable")}</title>
+        <title>{pageTitle(exitTitle)}</title>
         <Card className="text-center">
-          <h1 className="font-heading text-2xl uppercase">
-            You&apos;re not in this room
-          </h1>
+          <h1 className="font-heading text-2xl uppercase">{exitTitle}</h1>
           <p className="mt-3 text-sm">{exitMessage}</p>
           <Button className="mt-6 w-full" onClick={() => navigate("/")}>
             Back to home

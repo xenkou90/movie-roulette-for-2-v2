@@ -1,5 +1,10 @@
 import { createContext } from "react";
-import type { Decision, PlayerView, RoomView } from "@movie-roulette/shared";
+import type {
+  Decision,
+  PlayerView,
+  RoomView,
+  SessionEndReason,
+} from "@movie-roulette/shared";
 import type { GameState } from "../game/gameReducer";
 
 export interface CurrentRoom {
@@ -7,13 +12,14 @@ export interface CurrentRoom {
   you: PlayerView;
 }
 
-export type ExitReason = "expired" | "replaced";
+export type ExitReason = "expired" | "replaced" | SessionEndReason;
 
 export interface RoomContextValue {
   current: CurrentRoom | null;
   lastDeparture: string | null;
   exitReason: ExitReason | null;
   isRestoring: boolean;
+  idleWarningSeconds: number | null;
   game: GameState;
   enterRoom: (next: CurrentRoom, token: string) => void;
   leaveRoom: () => void;
@@ -21,6 +27,7 @@ export interface RoomContextValue {
   clearNotice: () => void;
   requestRematch: () => void;
   returnToRoom: () => void;
+  stillHere: () => void;
 }
 
 export const RoomContext = createContext<RoomContextValue | null>(null);
