@@ -43,7 +43,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     socket.data.roomCode = code;
     socket.data.playerId = player.id;
 
-    console.log(`[room] ${playerName} created ${code}`);
+    console.log(`[room] player ${player.id} created ${code}`);
 
     markActive(io, room, player);
 
@@ -86,7 +86,7 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     socket.data.roomCode = roomCode;
     socket.data.playerId = player.id;
 
-    console.log(`[room] ${playerName} joined ${roomCode}`);
+    console.log(`[room] player ${player.id} joined ${roomCode}`);
 
     for (const member of room.players) {
       markActive(io, room, member);
