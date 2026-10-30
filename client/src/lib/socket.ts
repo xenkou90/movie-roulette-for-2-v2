@@ -6,8 +6,10 @@ import type {
 
 export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-const serverUrl = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3001";
+const serverUrl: string | undefined =
+  import.meta.env.VITE_SERVER_URL || undefined;
 
-export const socket: AppSocket = io(serverUrl, {
-  autoConnect: false,
-});
+const options = { autoConnect: false };
+
+export const socket: AppSocket =
+  serverUrl === undefined ? io(options) : io(serverUrl, options);
