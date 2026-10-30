@@ -175,8 +175,10 @@ function RoomProvider({ children }: RoomProviderProps) {
   }, []);
 
   const leaveRoom = useCallback(() => {
-    socket.emit("room:leave", () => {
+    socket.emit("room:leave", loadSession(), () => {
       // Leaving cannot fail, so local state is cleared optimistically below.
+      // If offline, Socket.IO buffers this and sends it on reconnect, and the
+      // credentials let the server release the seat from the new connection.
     });
     clearSession();
     setCurrent(null);
