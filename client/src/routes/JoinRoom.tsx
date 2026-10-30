@@ -8,6 +8,7 @@ import {
 } from "@movie-roulette/shared";
 import { useSocket } from "../hooks/useSocket";
 import { useRoom } from "../hooks/useRoom";
+import AlreadyInRoom from "../components/room/AlreadyInRoom";
 import Screen from "../components/ui/Screen";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -26,6 +27,7 @@ function JoinRoom() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { socket, isConnected } = useSocket();
+  const { current, enterRoom } = useRoom();
 
   const [name, setName] = useState("");
   const [code, setCode] = useState(() => {
@@ -35,7 +37,9 @@ function JoinRoom() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { enterRoom } = useRoom();
+  if (current !== null && !isSubmitting) {
+    return <AlreadyInRoom code={current.room.code} />;
+  }
 
   const trimmedName = name.trim();
   const isCodeValid = ROOM_CODE_REGEX.test(code);
