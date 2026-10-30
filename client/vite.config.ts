@@ -10,4 +10,12 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
   },
+  server: {
+    proxy: {
+      "/socket.io": {
+        target: "http://localhost:3001",
+        ws: true,
+      },
+    },
+  },
 });
