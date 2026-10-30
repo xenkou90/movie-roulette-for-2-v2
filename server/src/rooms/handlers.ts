@@ -16,12 +16,37 @@ import {
   generateRoomCode,
   getRoom,
   joinRoom,
+  type Player,
+  type Room,
 } from "./store.js";
 import {
   isPlausibleToken,
   normalisePlayerName,
   normaliseRoomCode,
 } from "./validation.js";
+
+function seatFromCredentials(
+  credentials: unknown,
+): { room: Room; player: Player } | undefined {
+  if (typeof credentials !== "object" || credentials === null) {
+    return undefined;
+  }
+
+  const { code, token } = credentials as Record<string, unknown>;
+
+  const roomCode = normaliseRoomCode(code);
+  if (roomCode === null || !isPlausibleToken(token)) {
+    return undefined;
+  }
+
+  const room = getRoom(roomCode);
+  if (room === undefined) {
+    return undefined;
+  }
+
+  const player = findPlayerByToken(room, token);
+  return player === undefined ? undefined : { room, player };
+}
 
 export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
   socket.on("room:create", ({ name }, ack) => {
@@ -44,7 +69,6 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     socket.data.playerId = player.id;
 
     console.log(`[room] player ${player.id} created ${code}`);
-
     markActive(io, room, player);
 
     ack({
@@ -87,7 +111,6 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     socket.data.playerId = player.id;
 
     console.log(`[room] player ${player.id} joined ${roomCode}`);
-
     for (const member of room.players) {
       markActive(io, room, member);
     }
@@ -116,20 +139,14 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
       return;
     }
 
-    const roomCode = normaliseRoomCode(code);
-    if (roomCode === null || !isPlausibleToken(token)) {
+    const seat = seatFromCredentials({ code, token });
+
+    if (seat === undefined) {
       ack({ ok: false, error: "session_not_found" });
       return;
     }
 
-    const room = getRoom(roomCode);
-    const player =
-      room === undefined ? undefined : findPlayerByToken(room, token);
-
-    if (room === undefined || player === undefined) {
-      ack({ ok: false, error: "session_not_found" });
-      return;
-    }
+    const { room, player } = seat;
 
     clearTimeout(player.graceTimer);
     player.graceTimer = undefined;
@@ -145,7 +162,6 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     void socket.join(room.code);
     socket.data.roomCode = room.code;
     socket.data.playerId = player.id;
-
     markActive(io, room, player);
 
     ack({
@@ -166,11 +182,13 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     }
   });
 
-  socket.on("room:leave", (ack) => {
-    const seat = ownedSeat(socket);
+  socket.on("room:leave", (credentials, ack) => {
+    const seat = seatFromCredentials(credentials) ?? ownedSeat(socket);
+
     if (seat !== undefined) {
       releaseSeat(io, seat.room, seat.player);
     }
+
     forgetRoom(socket);
     ack({ ok: true });
   });

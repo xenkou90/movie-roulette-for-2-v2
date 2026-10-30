@@ -84,7 +84,10 @@ export interface ClientToServerEvents {
     payload: { code: string; name: string },
     ack: (result: RoomResult) => void,
   ) => void;
-  "room:leave": (ack: (result: { ok: true }) => void) => void;
+  "room:leave": (
+    credentials: { code: string; token: string } | null,
+    ack: (result: { ok: true }) => void,
+  ) => void;
   "session:resume": (
     payload: { code: string; token: string },
     ack: (result: ResumeResult) => void,
