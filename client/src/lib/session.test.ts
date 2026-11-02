@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_KEY, clearSession, loadSession, saveSession } from "./session";
 
 beforeEach(() => {
-  sessionStorage.clear();
+  localStorage.clear();
 });
 
 afterEach(() => {
@@ -29,13 +29,13 @@ describe("session storage", () => {
   });
 
   it("ignores stored data that isn't valid JSON", () => {
-    sessionStorage.setItem(STORAGE_KEY, "{not json");
+    localStorage.setItem(STORAGE_KEY, "{not json");
 
     expect(loadSession()).toBeNull();
   });
 
   it("ignores stored data with the wrong shape", () => {
-    sessionStorage.setItem(
+    localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ code: 12345, token: "secret-token" }),
     );
