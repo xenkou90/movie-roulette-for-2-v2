@@ -138,7 +138,7 @@ function GameScreen() {
             width={500}
             height={750}
             alt={`Poster for ${movie.title}`}
-            className="aspect-[2/3] h-full max-w-full rounded-2xl border-3 border-ink bg-ink/10 object-cover shadow-brutal-lg motion-safe:animate-card-in"
+            className="aspect-[2/3] h-full w-auto max-w-full rounded-2xl border-3 border-ink bg-ink/10 object-contain shadow-brutal-lg motion-safe:animate-card-in"
           />
         ) : (
           <div className="flex aspect-[2/3] h-full max-w-full items-center justify-center rounded-2xl border-3 border-ink bg-surface p-4 text-center font-heading uppercase shadow-brutal-lg">
