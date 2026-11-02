@@ -1,36 +1,38 @@
 # Accessibility audit
 
-**Date:** October 2026
+**Date:** October 2026, updated November 2026
 **Target:** WCAG 2.2, Level AA
-**Environment:** Windows, Chrome and Firefox, NVDA 2026.3 (2023.3.0.58174)
+**Environment:** Windows with Chrome, Firefox, and NVDA 2026.3; Android with Firefox and Messenger's in-app browser
 
 ## Scope
 
-Every screen and dialog: home, How it works, create a room, enter a room, waiting room, game, the leave dialog, match, and not found.
+Every screen and dialog: home, How it works, create a room, enter a room, waiting room, game, the leave dialog, the idle warning, match, and not found.
 
 ## Methods
 
-| Method                                    | What it checks                                                                          |
-| ----------------------------------------- | --------------------------------------------------------------------------------------- |
-| Lighthouse (accessibility, snapshot mode) | Automated checks on each screen in its live state                                       |
-| Keyboard only                             | Visible focus, logical order, full operability, no traps, Escape closes dialogs         |
-| NVDA screen reader                        | Announcements on screen changes, control names, live status messages, heading structure |
-| Zoom at 200% and 400%                     | Reflow without loss of content or sideways scrolling (WCAG 1.4.10)                      |
-| Reduced motion (emulated)                 | No movement when the user has asked for less                                            |
-| Forced colours (emulated)                 | Usability under Windows contrast themes                                                 |
+| Method                                    | What it checks                                                                                      |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Lighthouse (accessibility, snapshot mode) | Automated checks on each screen in its live state                                                   |
+| Keyboard only                             | Visible focus, logical order, full operability, no traps, Escape closes dialogs                     |
+| NVDA screen reader                        | Announcements on screen changes, control names, live status messages, heading structure             |
+| Zoom at 200% and 400%                     | Reflow without loss of content or sideways scrolling (WCAG 1.4.10)                                  |
+| Reduced motion (emulated)                 | No movement when the user has asked for less                                                        |
+| Forced colours (emulated)                 | Usability under Windows contrast themes                                                             |
+| Real devices                              | Two Android phones, in Firefox and Messenger's in-app browser, with a computer as the second player |
 
 Automated tools detect only part of accessibility problems, so manual checks carry most of the weight.
 
 ## Results
 
-| Check          | Result                                                                                                                              |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Lighthouse     | All applicable audits pass on every screen                                                                                          |
-| Keyboard only  | Pass: focus always visible, order logical, every action available, no traps, Escape closes both dialogs                             |
-| Screen reader  | Pass: screen changes announce the new heading, controls have clear names, status messages are announced, nothing decorative is read |
-| Zoom           | Pass after fix (see below)                                                                                                          |
-| Reduced motion | Pass: no movement anywhere                                                                                                          |
-| Forced colours | Pass: borders and text remain, states are distinguishable, status dots are backed by text                                           |
+| Check          | Result                                                                                                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Lighthouse     | All applicable audits pass on every screen                                                                                                                                                                         |
+| Keyboard only  | Pass: focus always visible, order logical, every action available, no traps, Escape closes every dialog                                                                                                            |
+| Screen reader  | Pass: screen changes announce the new heading, controls have clear names, and status messages are announced, including those caused by the other player, verified with a second device. Nothing decorative is read |
+| Zoom           | Pass after fix (see below)                                                                                                                                                                                         |
+| Reduced motion | Pass: no movement anywhere, in emulation and with the phone's own setting                                                                                                                                          |
+| Forced colours | Pass: borders and text remain, states are distinguishable, status dots are backed by text                                                                                                                          |
+| Real devices   | Pass: layout, touch targets, keyboards, sharing, and reduced motion work on both phones                                                                                                                            |
 
 ## Issues found and fixed during the audit
 
@@ -44,10 +46,11 @@ Automated tools detect only part of accessibility problems, so manual checks car
 - Partner connection status was planned as colour alone; it's shown in words as well (WCAG 1.4.1).
 - Pending buttons used `disabled`, which removed keyboard focus; they use `aria-disabled` and stay focusable.
 - Animations respect reduced motion, and the match background is static rather than continuously moving (WCAG 2.2.2).
+- Inactive players are warned two minutes before their seat closes and can stay with one action: a button, Escape, or a tap outside the dialog (WCAG 2.2.1).
 
 ## Known limitations
 
-- Status messages caused by the _other_ player, such as a partner joining, still need verifying with a screen reader on a second device.
 - Shortcut tooltips use the `title` attribute, which doesn't appear on keyboard focus or touch. The shortcuts are also exposed through `aria-keyshortcuts` and described in How it works.
-- Emulated reduced motion and forced colours are close to, but not identical to, the real operating system settings.
+- Forced colours were checked in emulation only, which is close to, but not identical to, Windows contrast themes.
+- Real-device testing covered Android only; iPhone and VoiceOver remain unchecked.
 - Automated component tests run in jsdom, which has no layout or CSS, so visual accessibility relies on the manual checks above.
