@@ -29,7 +29,7 @@ function optionalPositiveInt(name: string, fallback: number): number {
 export const env = {
   tmdbApiKey: required("TMDB_API_KEY"),
   port: optionalPositiveInt("PORT", 3001),
-  clientUrl: optional("CLIENT_URL", "http://loclahost:5173"),
+  clientUrl: optional("CLIENT_URL", "http://localhost:5173"),
   resumeGraceMs: optionalPositiveInt("RESUME_GRACE_MS", 90_000),
   idleTimeoutMs: optionalPositiveInt("IDLE_TIMEOUT_MS", 12 * 60_000),
   waitingTimeoutMs: optionalPositiveInt("WAITING_TIMEOUT_MS", 30 * 60_000),
