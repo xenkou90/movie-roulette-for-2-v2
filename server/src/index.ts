@@ -50,6 +50,22 @@ app.get("/health", (_req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-httpServer.listen(env.port, () => {
-  console.log(`Server listening on http://localhost:${env.port}`);
+httpServer.listen(env.port, env.host, () => {
+  console.log(`Server listening on http://${env.host}:${env.port}`);
 });
+
+function shutdown(signal: NodeJS.Signals): void {
+  console.log(`[server] ${signal} received, shutting down`);
+
+  void io.close(() => {
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error("[server] forced shutdown after timeout");
+    process.exit(1);
+  }, 5000).unref();
+}
+
+process.once("SIGINT", shutdown);
+process.once("SIGTERM", shutdown);
