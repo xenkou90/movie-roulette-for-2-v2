@@ -1,3 +1,8 @@
+// The session is kept in localStorage rather than sessionStorage, so it
+// survives the page being reloaded, or closed by the system to save memory
+// (common on phones), and the player can resume their seat. It's shared by
+// every tab in this browser, so it's one seat per browser: if the app opens
+// in another tab, that tab takes over the seat.
 export const STORAGE_KEY = "movie-roulette:session";
 
 export interface StoredSession {
@@ -7,10 +12,10 @@ export interface StoredSession {
 
 export function saveSession(session: StoredSession): void {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   } catch {
     // Storage is unavailable (for example, blocked by browser settings).
-    // The game still works; it just can't be resumed after a refresh.
+    // The game still works; it just can't be resumed if the page reloads.
   }
 }
 
@@ -18,7 +23,7 @@ export function loadSession(): StoredSession | null {
   let raw: string | null;
 
   try {
-    raw = sessionStorage.getItem(STORAGE_KEY);
+    raw = localStorage.getItem(STORAGE_KEY);
   } catch {
     return null;
   }
@@ -47,7 +52,7 @@ export function loadSession(): StoredSession | null {
 
 export function clearSession(): void {
   try {
-    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
   } catch {
     // Nothing to clear if storage is unavailable.
   }
