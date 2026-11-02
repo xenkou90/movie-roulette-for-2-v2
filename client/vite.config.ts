@@ -11,6 +11,7 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
   },
   server: {
+    allowedHosts: [".trycloudflare.com"],
     proxy: {
       "/socket.io": {
         target: "http://localhost:3001",
