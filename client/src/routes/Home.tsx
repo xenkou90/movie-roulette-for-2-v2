@@ -46,7 +46,7 @@ function Home() {
           className="self-center"
           onClick={() => setShowHowToPlay(true)}
         >
-          How it works
+          Wait, what is this?
         </Button>
       </div>
 

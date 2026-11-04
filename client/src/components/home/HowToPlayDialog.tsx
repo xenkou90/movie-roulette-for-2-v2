@@ -7,10 +7,27 @@ interface HowToPlayDialogProps {
 }
 
 function HowToPlayDialog({ open, onClose }: HowToPlayDialogProps) {
+  const introId = useId();
   const creditsId = useId();
 
   return (
-    <Dialog open={open} title="How it works" onClose={onClose} showCloseButton>
+    <Dialog
+      open={open}
+      title="How it works"
+      onClose={onClose}
+      showCloseButton
+      describedBy={introId}
+    >
+      <p
+        id={introId}
+        className="mt-4 rounded-xl border-2 border-ink bg-brand-yellow p-3 text-sm shadow-brutal-sm"
+      >
+        Can&apos;t agree on what to watch? You — grab your phone. You — grab
+        yours too. Now go through the same movies and tap <strong>Nope</strong>{" "}
+        or <strong>I&apos;m in</strong>. The first one you both say yes to is
+        tonight&apos;s movie.
+      </p>
+
       <ol className="mt-4 flex list-decimal flex-col gap-3 pl-5 text-sm marker:font-heading">
         <li>
           <strong className="font-heading uppercase">Create a room.</strong>{" "}
