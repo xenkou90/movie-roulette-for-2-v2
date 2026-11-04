@@ -76,7 +76,7 @@ function WaitingRoom() {
       try {
         await navigator.share({
           title: "Movie Roulette for 2",
-          text: `Join my movie night — room ${room.code}`,
+          text: `Can't decide what to watch, so you're helping. Room ${room.code}.`,
           url: inviteUrl,
         });
         return;
