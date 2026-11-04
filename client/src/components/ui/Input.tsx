@@ -4,16 +4,25 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id"> {
   label: string;
   error?: string;
   hint?: string;
+  describedBy?: string;
 }
 
-function Input({ label, error, hint, className = "", ...rest }: InputProps) {
+function Input({
+  label,
+  error,
+  hint,
+  describedBy: extraDescribedBy,
+  className = "",
+  ...rest
+}: InputProps) {
   const id = useId();
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
 
   const describedBy =
-    [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ") ||
-    undefined;
+    [extraDescribedBy, error ? errorId : null, hint ? hintId : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
 
   return (
     <div className="flex w-full flex-col gap-1">
