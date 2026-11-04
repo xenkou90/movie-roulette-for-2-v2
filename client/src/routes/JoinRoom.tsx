@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import {
   PLAYER_NAME_MAX_LENGTH,
@@ -29,17 +29,22 @@ function JoinRoom() {
   const { socket, isConnected } = useSocket();
   const { current, enterRoom } = useRoom();
 
-  const [name, setName] = useState("");
-  const [code, setCode] = useState(() => {
+  const inviteId = useId();
+
+  const [codeFromLink] = useState(() => {
     const fromUrl = searchParams.get("code") ?? "";
     return ROOM_CODE_REGEX.test(fromUrl) ? fromUrl : "";
   });
+  const [name, setName] = useState("");
+  const [code, setCode] = useState(codeFromLink);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (current !== null && !isSubmitting) {
     return <AlreadyInRoom code={current.room.code} />;
   }
+
+  const isInvited = codeFromLink !== "";
 
   const trimmedName = name.trim();
   const isCodeValid = ROOM_CODE_REGEX.test(code);
@@ -79,8 +84,17 @@ function JoinRoom() {
             Enter a Room
           </h1>
 
+          {isInvited && (
+            <p id={inviteId} className="text-center text-sm">
+              Your friend wants to pick a movie with you. You&apos;ll both see
+              the same movies — the first one you both say yes to is
+              tonight&apos;s movie.
+            </p>
+          )}
+
           <Input
             label="Your name"
+            describedBy={isInvited ? inviteId : undefined}
             value={name}
             onChange={(event) => setName(event.target.value)}
             maxLength={PLAYER_NAME_MAX_LENGTH}
