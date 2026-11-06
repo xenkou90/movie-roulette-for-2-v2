@@ -20,8 +20,8 @@ function Home() {
         <span className="h-3 w-3 rounded-full border-2 border-ink bg-surface" />
       </div>
 
-      <Card className="text-center">
-        <h1 className="font-heading text-5xl leading-none tracking-tight uppercase">
+      <Card className="@container text-center">
+        <h1 className="font-heading text-[min(3rem,17cqi)] leading-none tracking-tight uppercase">
           Movie
           <br />
           Roulette
